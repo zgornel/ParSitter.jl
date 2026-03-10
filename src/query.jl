@@ -4,8 +4,6 @@ using Combinatorics
 using DataStructures
 using AutoHashEquals
 
-const DEFAULT_CAPTURE_SYM = "@"
-
 _strip_spaces(text; maxlen = 80) = begin
     _txt = replace(text, r"[\s]+" => " ")
     _txt[1:min(maxlen, length(_txt))]
@@ -145,6 +143,11 @@ function build_xml_tree(tree_sitter_xml_ast::String)
     return xml = EzXML.parsexml(tmp)
 end
 
+
+const DEFAULT_CAPTURE_SYM = "@"
+const CAPTURE_REGEX = Regex("[.]*$(DEFAULT_CAPTURE_SYM)[.]*")
+
+
 """
     is_capture_node(n; capture_sym=DEFAULT_CAPTURE_SYM)
 
@@ -158,11 +161,14 @@ julia> ParSitter.is_capture_node("value@capture_key", capture_sym="@@")
 (is_match = false, capture_key = nothing)
 ```
 """
-is_capture_node(n::T; capture_sym = DEFAULT_CAPTURE_SYM) where {T <: AbstractString} = begin
-    is_match = !isnothing(match(Regex("[.]*$(capture_sym)[.]*"), n))
-    capture_key = is_match ? string(split(n, capture_sym)[2]) : ""
-    return (; is_match, capture_key)
+function is_capture_node(n::AbstractString; capture_sym = DEFAULT_CAPTURE_SYM)
+    if occursin(capture_sym, n)
+        parts = split(n, capture_sym)
+        return (is_match = true, capture_key = string(parts[end]))
+    end
+    return (is_match = false, capture_key = "")
 end
+
 is_capture_node(n::TreeQueryExpr{<:AbstractString}; capture_sym = DEFAULT_CAPTURE_SYM) = is_capture_node(n.head; capture_sym)
 is_capture_node(n; capture_sym = DEFAULT_CAPTURE_SYM) = (is_match = false, capture_key = "")
 
