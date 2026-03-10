@@ -19,62 +19,57 @@ using AbstractTrees
 
 export parse_code_snippet_to_query
 
+# Type for {{some_code}} i.e. replacements without `::`
+const GENERIC_TYPE = "GENERIC_CODE"
+
 # Default placeholder replacements by language and type
 const DEFAULT_TYPE_REPLACEMENTS = Dict(
     # Python replacements
     "python" => Dict(
-        "identifier" => "var",
-        "number" => "0",
-        "string" => "\"\"",
-        "boolean" => "True",
-        "expression" => "x",
-        "function" => "def f(): pass",
-        "variable" => "x",
-        "name" => "name",
+        "IDENTIFIER" => "var",
+        "NUMBER" => "0",
+        "STRING" => "\"\"",
+        "VARIABLE" => "x",
+        "BOOLEAN" => "True",
+        "FUNCTION" => "def f(): pass",
     ),
     # Julia replacements
     "julia" => Dict(
-        "identifier" => "var",
-        "number" => "0",
-        "string" => "\"\"",
-        "boolean" => "true",
-        "expression" => "x",
-        "function" => "function f() end",
-        "variable" => "x",
-        "name" => "name",
+        "IDENTIFIER" => "var",
+        "NUMBER" => "0",
+        "STRING" => "\"\"",
+        "VARIABLE" => "x",
+        "BOOLEAN" => "true",
+        "FUNCTION" => "function f() end",
     ),
     # C replacements
     "c" => Dict(
-        "identifier" => "var",
-        "number" => "0",
-        "string" => "\"\"",
-        "boolean" => "1",
-        "expression" => "x",
-        "function" => "void f() {}",
-        "variable" => "x",
-        "type" => "int",
-        "name" => "name",
+        "IDENTIFIER" => "var",
+        "NUMBER" => "0",
+        "STRING" => "\"\"",
+        "VARIABLE" => "x",
+        "TYPE" => "int",
+        "BOOLEAN" => "1",
+        "FUNCTION" => "void f() {}",
     ),
     # C# replacements
     "c#" => Dict(
-        "identifier" => "var",
-        "number" => "0",
-        "string" => "\"\"",
-        "boolean" => "true",
-        "expression" => "x",
-        "function" => "void F() { }",
-        "variable" => "x",
-        "name" => "name",
+        "IDENTIFIER" => "var",
+        "NUMBER" => "0",
+        "STRING" => "\"\"",
+        "VARIABLE" => "x",
+        "BOOLEAN" => "true",
+        "FUNCTION" => "void F() { }",
     ),
     # R replacements
     "r" => Dict(
         "IDENTIFIER" => "var",
         "NUMBER" => "0",
         "STRING" => "\"\"",
-        "BOOLEAN" => "TRUE",
-        "R_FORMULA" => "y~x",
-        "FUNCTION" => "f <- function() {}",
         "VARIABLE" => "x",
+        "BOOLEAN" => "TRUE",
+        "FUNCTION" => "f <- function() {}",
+        "R_FORMULA" => "y~x",
     ),
 )
 
@@ -100,7 +95,7 @@ function _extract_placeholders(code::String)::Vector{Tuple{String, String, Strin
             push!(placeholders, (original, capture_name, capture_type))
         else
             # Generic code placeholder (no "::" found)
-            push!(placeholders, (original, strip(content), "GENERIC_CODE"))
+            push!(placeholders, (original, strip(content), GENERIC_TYPE))
         end
     end
     return placeholders
@@ -135,7 +130,7 @@ function _replace_placeholder(
     custom_replacements::Dict = Dict()
 )
     # Check custom replacements first
-    if capture_type == "GENERIC_CODE"
+    if capture_type == GENERIC_TYPE
         if haskey(custom_replacements, capture_name)
             return custom_replacements[capture_name], false
         else
