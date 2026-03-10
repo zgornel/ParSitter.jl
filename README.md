@@ -6,6 +6,7 @@ A tree-matching and code parsing library, written in Julia. Parsing based on the
 [![Tests](https://github.com/zgornel/ParSitter.jl/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/zgornel/ParSitter.jl/actions/workflows/test.yml?query=branch%3Amaster)
 [![codecov](https://codecov.io/gh/zgornel/ParSitter.jl/graph/badge.svg?token=GWKJKBZ5FB)](https://codecov.io/gh/zgornel/ParSitter.jl)
 [![code style: runic](https://img.shields.io/badge/code_style-%E1%9A%B1%E1%9A%A2%E1%9A%BE%E1%9B%81%E1%9A%B2-black)](https://github.com/fredrikekre/Runic.jl)
+[![Aqua QA](https://juliatesting.github.io/Aqua.jl/dev/assets/badge.svg)](https://github.com/JuliaTesting/Aqua.jl)
 [![Documentation](https://img.shields.io/badge/docs-dev-blue.svg)](https://zgornel.github.io/ParSitter.jl/dev)
 
 ## Installation

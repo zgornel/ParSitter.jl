@@ -26,11 +26,13 @@ EzXML = "^1.2"
 JSON = "^1"
 Random = "1.11.0"
 julia = "^1.12"
+Aqua = "0.8"
 
 [extras]
 Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 
 [targets]
-test = ["Test", "Pkg", "Logging"]
+test = ["Aqua", "Test", "Pkg", "Logging"]
