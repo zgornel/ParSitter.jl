@@ -90,8 +90,8 @@ function parse(code::String, language::String; escape_chars = false, print_code 
     ts_cmd = _make_parse_code_cmd(code, language)
     out = try
         out = read(ts_cmd, String)
-    catch
-        @warn "Could not parse code snippet."
+    catch e
+        @warn "Could not parse code snippet.\n$e"
         ""
     end
     return replace(out, "\n" => "")

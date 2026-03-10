@@ -1,7 +1,10 @@
 name = "ParSitter"
 uuid = "bdeffda0-9f75-4d6c-9dad-1bfd8db84b8f"
-authors = ["Corneliu Cofaru <cornel@oxoaresearch.com>"]
 version = "0.1.0"
+authors = ["Corneliu Cofaru <cornel@oxoaresearch.com>"]
+
+[workspace]
+projects = ["docs"]
 
 [deps]
 AbstractTrees = "1520ce14-60c1-5f80-bbc7-55ef81b5835c"
@@ -11,6 +14,7 @@ Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 EzXML = "8f5d6c58-4d21-5cfd-889c-e3ad7ee6a615"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 
 [compat]
 AbstractTrees = "^0.4"
@@ -20,6 +24,7 @@ Combinatorics = "^1.0"
 DataStructures = "^0.19"
 EzXML = "^1.2"
 JSON = "^1"
+Random = "1.11.0"
 julia = "^1.12"
 
 [extras]
@@ -29,6 +34,3 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 test = ["Test", "Pkg", "Logging"]
-
-[workspace]
-projects = ["docs"]
