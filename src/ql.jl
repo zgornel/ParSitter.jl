@@ -207,7 +207,6 @@ end
     parse_code_snippet_to_query(
         code_snippet::String,
         language::String;
-        capture_type_mappings::Dict = Dict(),
         custom_replacements::Dict = Dict()
     ) -> ParSitter.TreeQueryExpr
 
@@ -216,7 +215,6 @@ Parse a code snippet with capture placeholders and convert it to a TreeQueryExpr
 # Arguments
 - `code_snippet::String`: Code with placeholders like `{{name::type}}`, `{{::type}}` or `{{custom_code}}`
 - `language::String`: Programming language ("python", "julia", "c", "c#", "r")
-- `capture_type_mappings::Dict`: Optional mapping of capture types to node values
 - `custom_replacements::Dict`: Optional replacements for `{{custom_code}}` placeholders
 
 # Returns
@@ -228,14 +226,13 @@ code = \"\"\"
 def {{func_name::identifier}}():
     {{code}}
 \"\"\"
-query_expr = parse_code_snippet_to_query(code, "python"; custom_replacements=Dict("code"=>"pass"))
+query_expr = ParSitter.QueryLanguage.parse_code_snippet_to_query(code, "python"; custom_replacements=Dict("code"=>"pass"))
 """
 function parse_code_snippet_to_query(
         code_snippet::String,
         language::String;
-        capture_type_mappings::Dict = Dict(),
         custom_replacements::Dict = Dict()
-    ) #::ParSitter.TreeQueryExpr
+    )
     # Validate language
     valid_languages = collect(keys(ParSitter.LANGUAGE_MAP))
     if language ∉ valid_languages
@@ -264,9 +261,9 @@ function parse_code_snippet_to_query(
     _tree = _parse_code_to_xml_tree(transformed_code, language)
 
     # step 4: transform parsed tree to TreeQueryExpr
-    return query_expr = _xml_node_to_tqexpr(_tree.root, symbol_map)
+    query_expr = _xml_node_to_tqexpr(_tree.root, symbol_map)
 
-    #return transformed_code, symbol_map, _tree, query_expr
+    return query_expr, symbol_map, transformed_code
 end
 
 end  # module

@@ -27,7 +27,7 @@
                 {{::IDENTIFIER}} <- glmmTMB({{::R_FORMULA}},
                                           family ={{family::IDENTIFIER}}({{identifier::IDENTIFIER}}={{id_val::STRING}}))
         """
-        generated_query = ParSitter.QueryLanguage.parse_code_snippet_to_query(query_snippet, language)
+        generated_query, _, _ = ParSitter.QueryLanguage.parse_code_snippet_to_query(query_snippet, language)
 
         query_results = ParSitter.query(
             target.root,
