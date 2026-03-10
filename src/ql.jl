@@ -124,11 +124,11 @@ end
 Replace a single placeholder with valid code based on its type and language.
 """
 function _replace_placeholder(
-    capture_name::String,
-    capture_type::String,
-    language::String,
-    custom_replacements::Dict = Dict()
-)
+        capture_name::String,
+        capture_type::String,
+        language::String,
+        custom_replacements::Dict = Dict()
+    )
     # Check custom replacements first
     if capture_type == GENERIC_TYPE
         if haskey(custom_replacements, capture_name)
@@ -153,7 +153,7 @@ Parse code using tree-sitter and return the XML representation.
 """
 function _parse_code_to_xml_tree(code::String, language::String)
     try
-        xml_output = ParSitter.parse(ParSitter.Code(code), language; escape_chars=false, print_code=false)
+        xml_output = ParSitter.parse(ParSitter.Code(code), language; escape_chars = false, print_code = false)
         if isempty(xml_output)
             error("Tree-sitter parsing returned empty output for language: $language")
         end
@@ -170,18 +170,18 @@ information from symbol mappings.
 """
 function _xml_node_to_tqexpr(node, symbol_map)
     node_name = node.name
-    node_content = strip(replace(node.content, r"\s"=>""))
+    node_content = strip(replace(node.content, r"\s" => ""))
     node_value = nothing
     skip_children = false
     if node_content in keys(symbol_map)
         capture_type, is_capturable = symbol_map[node_content]
         # We are dealing with an expression generated
         if is_capturable
-            node_value = "@" * replace(node_content, r"_.{10}$"=>"")
+            node_value = "@" * replace(node_content, r"_.{10}$" => "")
         else
             node_value = "*"
             if capture_type == "R_FORMULA"
-                skip_children=true
+                skip_children = true
             end
         end
     else
@@ -230,10 +230,12 @@ def {{func_name::identifier}}():
 \"\"\"
 query_expr = parse_code_snippet_to_query(code, "python"; custom_replacements=Dict("code"=>"pass"))
 """
-function parse_code_snippet_to_query(code_snippet::String,
-                                     language::String;
-                                     capture_type_mappings::Dict = Dict(),
-                                     custom_replacements::Dict = Dict())#::ParSitter.TreeQueryExpr
+function parse_code_snippet_to_query(
+        code_snippet::String,
+        language::String;
+        capture_type_mappings::Dict = Dict(),
+        custom_replacements::Dict = Dict()
+    ) #::ParSitter.TreeQueryExpr
     # Validate language
     valid_languages = collect(keys(ParSitter.LANGUAGE_MAP))
     if language ∉ valid_languages
@@ -248,10 +250,12 @@ function parse_code_snippet_to_query(code_snippet::String,
     transformed_code = code_snippet
     symbol_map = Dict()
     for (original, capture_name, capture_type) in placeholders
-        replacement, is_capturable = _replace_placeholder(capture_name,
-                                            capture_type,
-                                            language,
-                                            custom_replacements)
+        replacement, is_capturable = _replace_placeholder(
+            capture_name,
+            capture_type,
+            language,
+            custom_replacements
+        )
         transformed_code = replace(transformed_code, original => replacement)
         push!(symbol_map, replacement => (capture_type, is_capturable))
     end
@@ -260,7 +264,7 @@ function parse_code_snippet_to_query(code_snippet::String,
     _tree = _parse_code_to_xml_tree(transformed_code, language)
 
     # step 4: transform parsed tree to TreeQueryExpr
-    query_expr = _xml_node_to_tqexpr(_tree.root, symbol_map)
+    return query_expr = _xml_node_to_tqexpr(_tree.root, symbol_map)
 
     #return transformed_code, symbol_map, _tree, query_expr
 end

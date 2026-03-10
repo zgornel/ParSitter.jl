@@ -65,7 +65,7 @@ head of the expression, the rest are children.
 """
 build_tq_tree(v::T) where {T} = TreeQueryExpr(v, TreeQueryExpr[])
 build_tq_tree(t::TreeQueryExpr) = t
-build_tq_tree(t::NTuple{N, T}) where {N<:Int, T<:Any} = begin
+build_tq_tree(t::NTuple{N, T}) where {N <: Int, T <: Any} = begin
     if length(t) == 1
         return TreeQueryExpr{T}(t[1], TreeQueryExpr{T}[])
     elseif length(t) > 1
@@ -94,7 +94,7 @@ Base.convert(
     t::S;
     nodevalue = AbstractTrees.nodevalue,
     children = AbstractTrees.children
-) where {S<:Tuple} = begin
+) where {S <: Tuple} = begin
     c = children(t)
     if length(c) > 0
         return TreeQueryExpr(nodevalue(t), TreeQueryExpr[Base.convert(TreeQueryExpr, ci; nodevalue) for ci in c])
@@ -111,7 +111,7 @@ Base.convert(
     t::S;
     nodevalue = AbstractTrees.nodevalue,  # note: this is apparently not used
     children = AbstractTrees.children     # and the default AbstractTrees.nodevalue is used
-) where {S<:Union{Tuple, TreeQueryExpr}} = begin
+) where {S <: Union{Tuple, TreeQueryExpr}} = begin
     _destructure(t) = ifelse(length(t) == 1, first(t), t)
     c = children(t)
     if length(c) > 1
@@ -123,7 +123,7 @@ Base.convert(
     end
 end
 
-Base.convert(::Type{Tuple}, t::S) where S<:Tuple = t  # Fix from Aqua.jl
+Base.convert(::Type{Tuple}, t::S) where {S <: Tuple} = t  # Fix from Aqua.jl
 
 """
 Checks that a query tree does not contain duplicate capture keys.

@@ -7,4 +7,4 @@ query_snippet = """
 """
 language = "r"
 query_expr = ParSitter.QueryLanguage.parse_code_snippet_to_query(query_snippet, language);
-print_tree(query_expr; maxdepth=10)
+print_tree(query_expr; maxdepth = 10)
