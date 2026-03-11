@@ -269,11 +269,11 @@ function match_tree(
                 found &= subtree_found
             end
         else # match_type == :nonstrict
-            # Combinations of sub-trees of the target tree are matched against
+            # permutations of sub-trees of the target tree are matched against
             # the query tree; if any of them matches, the function returns
             subtrees_found = Bool[]
             _match_cache = Dict()
-            for c1c in combinations(c1, length(c2))
+            for c1_permutations in permutations(c1, length(c2))
                 _captured_symbols = MultiDict()
                 subtree_results = [
                     match_tree(
@@ -287,19 +287,19 @@ function match_tree(
                             capture_function,
                             node_comparison_yields_true
                         )
-                        for (t, q) in zip(c1c, c2)
+                        for (t, q) in zip(c1_permutations, c2)
                 ]
-                # All sub-trees of a specific combination must match
+                # All sub-trees of a specific permutation must match
                 _found = all(first, subtree_results)
                 if _found
                     for (_, subtree_captures, _) in subtree_results
                         merge!(captured_symbols, subtree_captures)  # add matched symbols
                     end
                 end
-                push!(subtrees_found, _found)  # store whether sub-tree combination was found
+                push!(subtrees_found, _found)  # store whether sub-tree permutation was found
             end
             # Resolve matching:
-            # - any of the matched sub-trees (from combinations will do)
+            # - any of the matched sub-trees (from permutations will do)
             # - logical AND is used to transmit finding recursively upwards
             found &= any(subtrees_found)
         end
