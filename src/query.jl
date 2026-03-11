@@ -218,6 +218,7 @@ function match_tree(
         capture_function = AbstractTrees.nodevalue,
         node_comparison_yields_true = (args...) -> false
     )
+
     # Initializations
     c1 = children(target_tree)
     c2 = children(query_tree)
@@ -225,13 +226,16 @@ function match_tree(
     n2 = query_tree_nodevalue(query_tree)
     is_capture_node_q, capture_key = is_capture_node(query_tree)
     is_capture_node_t, _ = is_capture_node(target_tree)
+
     # Checks whether node values match or, we have a capture node with a capture condition
     found::Bool = (n1 == n2) || node_comparison_yields_true(target_tree, query_tree)
+
     # Check hashes, return if found
     _hash = hash((target_tree, query_tree))
     if _hash in keys(match_cache)
         return match_cache[_hash]..., target_tree
     end
+
     # Start recursion
     if length(c1) == length(c2) == 0
         if is_capture_node_q
@@ -275,12 +279,12 @@ function match_tree(
                 merge!(captured_symbols, subtree_captures)
                 found &= subtree_found
             end
-        else # match_type == :nonstrict
+        elseif match_type == :nonstrict
             # permutations of sub-trees of the target tree are matched against
             # the query tree; if any of them matches, the function returns
             subtrees_found = Bool[]
             _match_cache = Dict()
-            for c1_permutations in permutations(c1, length(c2))
+            for c1_permutation in unique(permutations(c1, length(c2)))
                 _captured_symbols = MultiDict()
                 subtree_results = [
                     match_tree(
@@ -294,7 +298,7 @@ function match_tree(
                             capture_function,
                             node_comparison_yields_true
                         )
-                        for (t, q) in zip(c1_permutations, c2)
+                        for (t, q) in zip(c1_permutation, c2)
                 ]
                 # All sub-trees of a specific permutation must match
                 _found = all(first, subtree_results)
@@ -309,6 +313,48 @@ function match_tree(
             # - any of the matched sub-trees (from permutations will do)
             # - logical AND is used to transmit finding recursively upwards
             found &= any(subtrees_found)
+        elseif match_type == :speculative
+            # Speculative matching: returns first match found.
+            # The search compares query nodes permutations against the target tree;
+            # the target tree is searched linearly and the search stops
+            # after the first match.
+            _match_cache = Dict()
+            subtrees_found = Bool[]
+            lenc2 = length(c2)
+            # seach over all query nodes permutations
+            for c2_permutation in unique(permutations(c2))
+                _captured_symbols = MultiDict()  # or reuse a temp one
+                qidx = 1
+                # search linearly over target tree nodes
+                for t in c1
+                    if qidx > lenc2
+                        @info "subtree found! $c2_permutation"
+                        break  # break if all query trees found
+                    end
+                    _found, subtree_captures, _ = match_tree(
+                        t, c2_permutation[qidx];
+                        match_cache = _match_cache,
+                        captured_symbols = _captured_symbols,
+                        match_type = :speculative,
+                        is_capture_node,
+                        target_tree_nodevalue,
+                        query_tree_nodevalue,
+                        capture_function,
+                        node_comparison_yields_true
+                    )
+                    if _found
+                        merge!(captured_symbols, subtree_captures)
+                        qidx += 1
+                    end
+                end
+                qidx > lenc2 && begin
+                    push!(subtrees_found, true)
+                    break
+                end
+            end
+            found &= any(subtrees_found)
+        else
+            @error "Unknown match type. Use :strict, :nonstrict and :speculative"
         end
         push!(match_cache, _hash => (found, captured_symbols))
         return found, captured_symbols, target_tree

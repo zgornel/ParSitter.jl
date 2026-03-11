@@ -37,7 +37,13 @@ function check_tree_sitter(;
     )
     return if system == :Linux
         @assert Sys.islinux() "This is not a Linux system."
-        @assert !isempty(try read(`tree-sitter --version`, String) catch; "" end) ||
+        @assert !isempty(
+            try
+                read(`tree-sitter --version`, String)
+            catch
+                ""
+            end
+        ) ||
             isfile("/usr/bin/tree-sitter") ||
             isfile("/bin/tree-sitter") ||
             isfile(tree_sitter_path) "tree-sitter not found on system"
