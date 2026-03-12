@@ -85,6 +85,8 @@ explicitly the `\n`, `\t` and `\r` characters. If `print_code` is `true`
 it will print the code.
 """
 function parse(code::String, language::String; escape_chars = false, print_code = false)
+    check_language(language, LANGUAGE_MAP)
+    check_tree_sitter()
     escape_chars && (code = _enable_escape_chars(code))
     print_code && println("---\n$code\n---\n")
     ts_cmd = _make_parse_code_cmd(code, language)
@@ -116,6 +118,8 @@ Parsing function for `::File` objects. Reads the content of the file, sends
 it to tree-sitter for parsing and returns the parse results.
 """
 function parse(file::File, language::String)
+    check_language(language, LANGUAGE_MAP)
+    check_tree_sitter()
     _file = abspath(_normalize_fs_path(file.name))
     @debug "Parsing file @ $_file ..."
     ts_cmd = _make_parse_file_cmd(_file, language)
@@ -151,4 +155,14 @@ function parse(dir::Directory, language::String)
         end
     end
     return parses
+end
+
+"""
+    print_code_tree(code::String, language::String; maxdepth=100)
+
+Prints the AST of a gieven piece of `code` written in a given
+programming `language`.
+"""
+print_code_tree(code::String, language::String; maxdepth=100) = begin
+    print_tree(ParSitter.build_xml_tree(ParSitter.parse(ParSitter.Code(cc), language)[""]).root; maxdepth);
 end
