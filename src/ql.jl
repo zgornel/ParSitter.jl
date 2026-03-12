@@ -82,8 +82,8 @@ const DEFAULT_TYPE_REPLACEMENTS = Dict(
 Retrieves the comment symbol from DEFAULT_TYPE_REPLACEMENTS.
 All comments are assument to be of the form: \"<COMMENT_SYMBOL>comment\".
 """
-function _get_comment_symbol(language; capture_type="COMMENT")
-    first(split(DEFAULT_TYPE_REPLACEMENTS[language][capture_type], "comment"))
+function _get_comment_symbol(language; capture_type = "COMMENT")
+    return first(split(DEFAULT_TYPE_REPLACEMENTS[language][capture_type], "comment"))
 end
 
 
@@ -122,7 +122,7 @@ function _generate_name(capture_name, capture_type, language)
     @assert haskey(DEFAULT_TYPE_REPLACEMENTS, language)
     lang_replacements = DEFAULT_TYPE_REPLACEMENTS[language]
     @assert haskey(lang_replacements, capture_type)
-    if isempty(capture_name)
+    return if isempty(capture_name)
         if capture_type ∉ ["NUMBER", "BOOLEAN"]
             return lang_replacements[capture_type] * "_" * randstring(10)
         else
@@ -200,9 +200,9 @@ function _xml_node_to_tqexpr(node, symbol_map, language)
         if is_capturable
             if capture_type == "COMMENT"  # remove comment symbol from capturable name
                 _comment_symbol = _get_comment_symbol(language; capture_type)
-                node_value = replace(node_value,  _comment_symbol => "")
+                node_value = replace(node_value, _comment_symbol => "")
             end
-                node_value = "@" * replace(node_value, r"_.{10}$" => "")
+            node_value = "@" * replace(node_value, r"_.{10}$" => "")
         else
             if capture_type == "R_FORMULA"
                 skip_children = true

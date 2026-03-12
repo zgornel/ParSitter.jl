@@ -163,6 +163,6 @@ end
 Prints the AST of a gieven piece of `code` written in a given
 programming `language`.
 """
-print_code_tree(code::String, language::String; maxdepth=100) = begin
-    print_tree(ParSitter.build_xml_tree(ParSitter.parse(ParSitter.Code(cc), language)[""]).root; maxdepth);
+print_code_tree(code::String, language::String; maxdepth = 100) = begin
+    print_tree(ParSitter.build_xml_tree(ParSitter.parse(ParSitter.Code(cc), language)[""]).root; maxdepth)
 end
