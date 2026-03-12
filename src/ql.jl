@@ -26,6 +26,7 @@ const GENERIC_TYPE = "GENERIC_CODE"
 const DEFAULT_TYPE_REPLACEMENTS = Dict(
     # Python replacements
     "python" => Dict(
+        "COMMENT" => "#comment",
         "IDENTIFIER" => "var",
         "NUMBER" => "0",
         "STRING" => "\"\"",
@@ -35,6 +36,7 @@ const DEFAULT_TYPE_REPLACEMENTS = Dict(
     ),
     # Julia replacements
     "julia" => Dict(
+        "COMMENT" => "#comment",
         "IDENTIFIER" => "var",
         "NUMBER" => "0",
         "STRING" => "\"\"",
@@ -44,6 +46,7 @@ const DEFAULT_TYPE_REPLACEMENTS = Dict(
     ),
     # C replacements
     "c" => Dict(
+        "COMMENT" => "//comment",
         "IDENTIFIER" => "var",
         "NUMBER" => "0",
         "STRING" => "\"\"",
@@ -54,6 +57,7 @@ const DEFAULT_TYPE_REPLACEMENTS = Dict(
     ),
     # C# replacements
     "c#" => Dict(
+        "COMMENT" => "//comment",
         "IDENTIFIER" => "var",
         "NUMBER" => "0",
         "STRING" => "\"\"",
@@ -63,6 +67,7 @@ const DEFAULT_TYPE_REPLACEMENTS = Dict(
     ),
     # R replacements
     "r" => Dict(
+        "COMMENT" => "#comment",
         "IDENTIFIER" => "var",
         "NUMBER" => "0",
         "STRING" => "\"\"",
@@ -72,6 +77,15 @@ const DEFAULT_TYPE_REPLACEMENTS = Dict(
         "R_FORMULA" => "y~x",
     ),
 )
+
+"""
+Retrieves the comment symbol from DEFAULT_TYPE_REPLACEMENTS.
+All comments are assument to be of the form: \"<COMMENT_SYMBOL>comment\".
+"""
+function _get_comment_symbol(language; capture_type="COMMENT")
+    first(split(DEFAULT_TYPE_REPLACEMENTS[language][capture_type], "comment"))
+end
+
 
 """
     _extract_placeholders(code::String) -> Vector{Tuple{String, String, String}}
@@ -104,7 +118,10 @@ end
 """
 Generates a valid symbol name depending on original capture_name, the type and language replacements.
 """
-function _generate_name(capture_name, capture_type, lang_replacements)
+function _generate_name(capture_name, capture_type, language)
+    @assert haskey(DEFAULT_TYPE_REPLACEMENTS, language)
+    lang_replacements = DEFAULT_TYPE_REPLACEMENTS[language]
+    @assert haskey(lang_replacements, capture_type)
     if isempty(capture_name)
         if capture_type ∉ ["NUMBER", "BOOLEAN"]
             return lang_replacements[capture_type] * "_" * randstring(10)
@@ -112,8 +129,15 @@ function _generate_name(capture_name, capture_type, lang_replacements)
             return lang_replacements[capture_type]  # numbers/booleans are not randomized
         end
     else
-        # Symbols that are captured have the original capture name in the randomized value
-        return capture_name * "_" * randstring(10)
+        if capture_type == "COMMENT"
+            # Note: assumes NO space after comment symbol in  DEFAULT_TYPE_REPLACEMENTS
+            _comment_symbol = _get_comment_symbol(language; capture_type)
+            return _comment_symbol * capture_name * "_" * randstring(10)
+        else
+            # Symbols that are captured have the original
+            # capture name in the randomized value
+            return capture_name * "_" * randstring(10)
+        end
     end
 end
 
@@ -138,10 +162,7 @@ function _replace_placeholder(
         end
     end
     # Check language-specific replacements
-    @assert haskey(DEFAULT_TYPE_REPLACEMENTS, language)
-    lang_replacements = DEFAULT_TYPE_REPLACEMENTS[language]
-    @assert haskey(lang_replacements, capture_type)
-    generated_name = _generate_name(capture_name, capture_type, lang_replacements)
+    generated_name = _generate_name(capture_name, capture_type, language)
     is_capturable = ifelse(!isempty(capture_name), true, false)
     return generated_name, is_capturable
 end
@@ -168,26 +189,30 @@ end
 Function that transforms an XML tree into a `TreeQueryExpr` based on the
 information from symbol mappings.
 """
-function _xml_node_to_tqexpr(node, symbol_map)
+function _xml_node_to_tqexpr(node, symbol_map, language)
     node_name = node.name
     node_content = strip(replace(node.content, r"\s" => ""))
-    node_value = nothing
+    node_value = node_content
     skip_children = false
     if node_content in keys(symbol_map)
         capture_type, is_capturable = symbol_map[node_content]
         # We are dealing with an expression generated
         if is_capturable
-            node_value = "@" * replace(node_content, r"_.{10}$" => "")
+            if capture_type == "COMMENT"  # remove comment symbol from capturable name
+                _comment_symbol = _get_comment_symbol(language; capture_type)
+                node_value = replace(node_value,  _comment_symbol => "")
+            end
+                node_value = "@" * replace(node_value, r"_.{10}$" => "")
         else
-            node_value = "*"
             if capture_type == "R_FORMULA"
                 skip_children = true
             end
+            node_value = "*"
         end
     else
         # This is a node that was not inserted by us or,
         # a node in a sub-tree of a generated expression
-        if node_name == "identifier"
+        if node_name == "identifier"  # this is a tree-sitter node type
             node_value = node_content
         else
             node_value = "*"
@@ -196,7 +221,7 @@ function _xml_node_to_tqexpr(node, symbol_map)
     child_exprs = ParSitter.TreeQueryExpr[]
     if !skip_children
         for child in children(node)
-            push!(child_exprs, _xml_node_to_tqexpr(child, symbol_map))
+            push!(child_exprs, _xml_node_to_tqexpr(child, symbol_map, language))
         end
     end
     return ParSitter.TreeQueryExpr(node_value, child_exprs)
@@ -261,7 +286,7 @@ function parse_code_snippet_to_query(
     _tree = _parse_code_to_xml_tree(transformed_code, language)
 
     # step 4: transform parsed tree to TreeQueryExpr
-    query_expr = _xml_node_to_tqexpr(_tree.root, symbol_map)
+    query_expr = _xml_node_to_tqexpr(_tree.root, symbol_map, language)
 
     return query_expr, symbol_map, transformed_code
 end

@@ -7,6 +7,7 @@
     _capture_function(n) = (v = strip(replace(n.content, r"[\s]" => "")), srow = n["srow"], erow = n["erow"], scol = n["scol"], ecol = n["ecol"])
     R_code = ParSitter.Code(
             """
+            # a comment
             mod12 <- glmmTMB(y ~ x1 + x2 + x3 + x4 + (0 | x5),
                              data = data_variable,
                              family = binomial(link = "linear"))
@@ -69,6 +70,7 @@
         target = ParSitter.build_xml_tree(_parsed)
 
         query_snippet = """
+                {{comment::COMMENT}}
                 {{::IDENTIFIER}} <- glmmTMB({{::R_FORMULA}},
                                              data = {{data::IDENTIFIER}},
                                              family = {{family::IDENTIFIER}}({{identifier::IDENTIFIER}}={{id_val::STRING}}))
@@ -87,9 +89,13 @@
         filter!(first, query_results) # keep only matches
         @test length(query_results) == 1  # single match
 
-        CORRECT_CAPTURES = ["family" => "binomial", "id_val" => "\"linear\"", "identifier" => "link", "data" => "data_variable"]
+        CORRECT_CAPTURES = ["family" => "binomial",
+                            "id_val" => "\"linear\"",
+                            "identifier" => "link",
+                            "data" => "data_variable",
+                            "comment"=> "#acomment"]  # no spaces in comments
         _, qres = first(query_results)
-        @test length(keys(qres)) == 4
+        @test length(keys(qres)) == 5
         for (k, correct_val) in CORRECT_CAPTURES
             @test qres[k][1].v == correct_val
         end
@@ -101,6 +107,7 @@
         target = ParSitter.build_xml_tree(_parsed)
 
         query_snippet = """
+                {{comment::COMMENT}}
                 {{::IDENTIFIER}} <- glmmTMB({{::R_FORMULA}},
                                           family ={{family::IDENTIFIER}}({{identifier::IDENTIFIER}}={{id_val::STRING}}))
         """
@@ -118,9 +125,12 @@
         filter!(first, query_results) # keep only matches
         @test length(query_results) == 1  # single match
 
-        CORRECT_CAPTURES = ["family" => "binomial", "id_val" => "\"linear\"", "identifier" => "link"]
+        CORRECT_CAPTURES = ["family" => "binomial",
+                            "id_val" => "\"linear\"",
+                            "identifier" => "link",
+                            "comment"=> "#acomment"]  # no spaces in comments
         _, qres = first(query_results)
-        @test length(keys(qres)) == 3  # there are 3 capture patterns
+        @test length(keys(qres)) == 4  # there are 3 capture patterns
         for (k, correct_val) in CORRECT_CAPTURES
             @test qres[k][1].v == correct_val
         end
