@@ -11,9 +11,13 @@ A tree-matching and code parsing library, written in Julia. Parsing based on the
 
 ## Installation
 
-The installation can be done by manually by cloning this repository with:
+The installation can be done from Julia with
+```julia
+using Pkg; Pkg.add("ParSitter")
 ```
-git clone https://github.com/zgornel/ParSitter.jl
+or through the `pkg` mode
+```
+] add ParSitter
 ```
 
 Check out the [documentation](https://zgornel.github.io/ParSitter.jl/dev) for information on using the library.

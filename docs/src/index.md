@@ -14,9 +14,13 @@ A code query is basically [tree pattern matching](https://en.wikipedia.org/wiki/
  - tree matching using queries that can be expressed as `Tuple`s (in an [S-Expression](https://en.wikipedia.org/wiki/S-expression) fashion)
 
 # Installation
-The installation can be done by manually by cloning the repository with:
+ParSitter.jl is a registered package and can be easily installed with
+```julia
+using Pkg; Pkg.add("ParSitter")
 ```
-git clone https://github.com/zgornel/ParSitter.jl
+or alternatively, using the `pkg` mode
+```
+] add ParSitter
 ```
 
 # Contents
