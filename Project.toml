@@ -36,3 +36,6 @@ Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
 
 [targets]
 test = ["Aqua", "Test", "Pkg", "Logging"]
+
+[apps]
+parsitter = {}

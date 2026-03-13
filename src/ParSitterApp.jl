@@ -1,9 +1,4 @@
-### module parsitter
-
-
-using Pkg
-project_root_path = abspath(dirname(@__FILE__))
-Pkg.activate(project_root_path)
+module ParSitterApp
 
 using Logging
 using ParSitter
@@ -37,21 +32,10 @@ function get_arguments(args::Vector{String})
 end
 
 
-########################
-# Main module function #
-########################
-function julia_main()::Cint  # for compilation to executable
-    try
-        real_main()          # actual main function
-    catch
-        Base.invokelatest(Base.display_error, Base.catch_stack())
-        return 1
-    end
-    return 0
-end
-
-
-function real_main()
+############################
+# Main entrypoint function #
+############################
+function @main(ARGS)
     # Parse command line arguments
     args = get_arguments(ARGS)
 
@@ -96,15 +80,4 @@ function real_main()
     return 0
 end
 
-
-##############
-# Run client #
-##############
-
-main_script_file = abspath(PROGRAM_FILE)
-
-if occursin("debugger", main_script_file) || main_script_file == @__FILE__
-    real_main()
-end
-
-### end  # module
+end  # module
