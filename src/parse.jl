@@ -13,7 +13,7 @@ end
 """
 Map from input language to `tree-sitter` compatible language name.
 """
-const LANGUAGE_MAP = Dict(
+const LANGUAGE_MAP = Dict{String, String}(
     "python" => "source.python",
     "julia" => "source.julia",
     "c" => "source.c",
@@ -24,7 +24,7 @@ const LANGUAGE_MAP = Dict(
 """
 Map from input language to file extensions that can be parsed.
 """
-const FILE_EXTENSIONS = Dict(
+const FILE_EXTENSIONS = Dict{String, Vector{String}}(
     "python" => [".py"],
     "julia" => [".jl"],
     "c" => [".c", ".h"],
