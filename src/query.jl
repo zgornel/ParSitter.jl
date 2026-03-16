@@ -135,13 +135,20 @@ end
 """
     build_xml_tree(tree_sitter_xml_ast::String)
 
-Postprocesses and parse the tree-sitter XML output to
-something that can be traversed to match a given query.
+Builds an XML tree out of the XML output from tree-sitter.
+Internally, calls `EzXML.parsexml`.
 """
 function build_xml_tree(tree_sitter_xml_ast::String)
     tmp = replace(tree_sitter_xml_ast, "\n" => "")
     return xml = EzXML.parsexml(tmp)
 end
+
+"""
+    build_xml_tree(parse_output::ParseResult)
+
+Builds an XML tree out of the parsing results contained in a `::ParseResult` object.
+"""
+build_xml_tree(parse_output::ParseResult) = build_xml_tree(parse_output.parsed)
 
 
 const DEFAULT_CAPTURE_SYM = "@"

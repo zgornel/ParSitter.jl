@@ -12,12 +12,10 @@ using Reexport
 export check_tree_sitter,   # checks tree sitter install
        parse,               # parses code, files and directories
        print_code_tree,     # prints code using AbstractTrees
-       TreeQueryExpr,       # struct for tree queries
        build_tq_tree,       # builds TreeQueryExpr's from tuples
        build_xml_tree,      # builds an XML tree from XML string
        match_tree,          # matches two trees
        query,               # queries a tree (matches also all subtrees)
        get_capture,         # get values of captured symbols from query results
        parse_code_snippet_to_query  # generate a tree query from a code snippet
-
 end  # module

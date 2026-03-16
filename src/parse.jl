@@ -11,6 +11,19 @@ struct Code
 end
 
 """
+    struct ParseResult
+        file::Union{Nothing, String}
+        parsed::String
+    end
+
+Parsing result object. It is returned from parsing `::Code` and `::File objects.`
+"""
+struct ParseResult
+    file::Union{Nothing, String}
+    parsed::String
+end
+
+"""
 Map from input language to `tree-sitter` compatible language name.
 """
 const LANGUAGE_MAP = Dict{String, String}(
@@ -78,13 +91,13 @@ _enable_escape_chars(code) = begin
 end
 
 """
-    parse(code::String, language::String; escape_chars=false, print_code=false)
+    _parse(code::String, language::String; escape_chars=false, print_code=false)
 
-Parsing function for strings. Use `escape_chars=true` if the code contains
-explicitly the `\n`, `\t` and `\r` characters. If `print_code` is `true`
-it will print the code.
+The code parsing function for `::String` inputs. It is part of the internal API and should not be
+used. Use `escape_chars=true` if the code contains explicitly the `\n`, `\t`
+and `\r` characters. If `print_code` is `true` it will print the code.
 """
-function parse(code::String, language::String; escape_chars = false, print_code = false)
+function _parse(code::String, language::String; escape_chars = false, print_code = false)
     check_language(language, LANGUAGE_MAP)
     check_tree_sitter()
     escape_chars && (code = _enable_escape_chars(code))
@@ -102,20 +115,20 @@ end
 """
     parse(code::Code, language::String; escape_chars=false, print_code=false)
 
-Parsing function for `::Code` objects. Calls the method for `::String`. Use
-`escape_chars=true` if the code contains explicitly the `\n`, `\t` and `\r`
+Parsing function for `::Code` objects. Calls the `_parse` function for `::String`s.
+Use `escape_chars=true` if the code contains explicitly the `\n`, `\t` and `\r`
 characters. If `print_code` is `true` it will print the code.
 
 """
 function parse(code::Code, language::String; escape_chars = false, print_code = false)
-    return Dict("" => parse(code.code, language; escape_chars, print_code))
+    return ParseResult(nothing, _parse(code.code, language; escape_chars, print_code))
 end
 
 """
     parse(code::File, language::String)
 
 Parsing function for `::File` objects. Reads the content of the file, sends
-it to tree-sitter for parsing and returns the parse results.
+it to tree-sitter for parsing and returns a `ParseResult` with  parse results.
 """
 function parse(file::File, language::String)
     check_language(language, LANGUAGE_MAP)
@@ -129,7 +142,7 @@ function parse(file::File, language::String)
         @warn "Could not parse $_file"
         ""
     end
-    return Dict(_file => replace(out, "\n" => ""))
+    return ParseResult(_file, replace(out, "\n" => ""))
 end
 
 """
@@ -139,7 +152,7 @@ Parsing function for `::Directory` objects. Reads the contents of the directory
 and for supported files, calls the parsing method for `::File` objects.
 """
 function parse(dir::Directory, language::String)
-    parses = Dict{String, String}()
+    parses = Vector{ParseResult}()
     for (root, _, files) in walkdir(dir.name)
         for file in files
             if any(
@@ -148,14 +161,13 @@ function parse(dir::Directory, language::String)
                 )
                 _file = File(joinpath(root, file))
                 _parsed = parse(_file, language)
-                for (k, v) in _parsed
-                    push!(parses, k => v)
-                end
+                push!(parses, _parsed)
             end
         end
     end
     return parses
 end
+
 
 """
     print_code_tree(code::String, language::String; maxdepth=100)

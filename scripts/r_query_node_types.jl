@@ -17,7 +17,6 @@ _R_code = (
 #_parsed = ParSitter.parse(_PYTHON...)
 #_parsed = ParSitter.parse(_C...)
 _parsed = ParSitter.parse(_R_code...)
-_parsed = first(values(_parsed))
 
 target = ParSitter.build_xml_tree(_parsed)
 

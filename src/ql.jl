@@ -174,11 +174,11 @@ Parse code using tree-sitter and return the XML representation.
 """
 function _parse_code_to_xml_tree(code::String, language::String)
     try
-        xml_output = ParSitter.parse(ParSitter.Code(code), language; escape_chars = false, print_code = false)
-        if isempty(xml_output)
+        _output = ParSitter.parse(ParSitter.Code(code), language; escape_chars = false, print_code = false)
+        if isempty(_output.parsed)
             error("Tree-sitter parsing returned empty output for language: $language")
         end
-        return ParSitter.build_xml_tree(first(values(xml_output)))
+        return ParSitter.build_xml_tree(_output)
     catch e
         error("Failed to parse code with tree-sitter: $(e.msg)")
     end

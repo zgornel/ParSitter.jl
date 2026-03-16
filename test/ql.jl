@@ -17,7 +17,6 @@
 
     @testset "match_type=:strict, partial arguments: (NO MATCHES)" begin
         _parsed = ParSitter.parse(R_code, language)
-        _parsed = first(values(_parsed))
         target = ParSitter.build_xml_tree(_parsed)
 
         query_snippet = """
@@ -41,7 +40,6 @@
 
     @testset "match_type=:strict, unordered arguments: (NO MATCHES)" begin
         _parsed = ParSitter.parse(R_code, language)
-        _parsed = first(values(_parsed))
         target = ParSitter.build_xml_tree(_parsed)
 
         query_snippet = """
@@ -66,7 +64,6 @@
 
     @testset "match_type=:strict, ordered arguments: (OK)" begin
         _parsed = ParSitter.parse(R_code, language)
-        _parsed = first(values(_parsed))
         target = ParSitter.build_xml_tree(_parsed)
 
         query_snippet = """
@@ -105,7 +102,6 @@
 
     @testset "match_type=:nonstrict, partial arguments: (OK)" begin
         _parsed = ParSitter.parse(R_code, language)
-        _parsed = first(values(_parsed))
         target = ParSitter.build_xml_tree(_parsed)
 
         query_snippet = """
@@ -142,7 +138,6 @@
 
     @testset "match_type=:nonstrict, unordered arguments: (OK)" begin
         _parsed = ParSitter.parse(R_code, language)
-        _parsed = first(values(_parsed))
         target = ParSitter.build_xml_tree(_parsed)
 
         query_snippet = """
@@ -174,7 +169,6 @@
 
     @testset "match_type=:nonstrict, ordered arguments: (OK)" begin
         _parsed = ParSitter.parse(R_code, language)
-        _parsed = first(values(_parsed))
         target = ParSitter.build_xml_tree(_parsed)
 
         query_snippet = """

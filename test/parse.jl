@@ -1,4 +1,4 @@
-import ParSitter: LANGUAGE_MAP, parse, Code, Directory
+import ParSitter: LANGUAGE_MAP, parse, Code, Directory, ParseResult
 
 test_dir = abspath(dirname(@__FILE__))
 
@@ -14,8 +14,13 @@ test_dir = abspath(dirname(@__FILE__))
         for language in keys(LANGUAGE_MAP)
             language_dir = joinpath(test_dir, "code", language)
             parsed = parse(Directory(language_dir), language)
-            @test parsed isa Dict   # parsing command executed and returned
+            @test parsed isa Vector{ParseResult}   # parsing command executed and returned
             @test !isempty(parsed)  # contents were parsed
+            for p in parsed
+                @test p.file isa String
+                @test !isempty(p.file)
+                @test !isempty(p.parsed)
+            end
         end
     end
 
@@ -30,15 +35,25 @@ test_dir = abspath(dirname(@__FILE__))
         for language in keys(LANGUAGE_MAP)
             language_dir = joinpath(test_dir, "code", language)
             file_path = joinpath(language_dir, FILE_MAP[language])
+            # String
+            parsed = ParSitter._parse(
+                read(file_path, String),
+                language,
+                escape_chars = false,
+                print_code = false
+            )
+            @test parsed isa String         # parsing command executed and returned
+            @test !isempty(parsed)          # contents were parsed
+            # Code
             parsed = parse(
                 Code(read(file_path, String)),
                 language,
                 escape_chars = false,
                 print_code = false
             )
-            @test parsed isa Dict   # parsing command executed and returned
-            @test !isempty(parsed)  # contents were parsed
+            @test parsed isa ParseResult    # parsing command executed and returned
+            @test isnothing(parsed.file)    # contents were parsed
+            @test !isempty(parsed.parsed)   # contents were parsed
         end
     end
-
 end
