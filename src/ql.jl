@@ -13,6 +13,7 @@ module QueryLanguage
 
 import Base.Regex
 import ..ParSitter
+import ..ParSitter: DEFAULT_TYPE_REPLACEMENTS
 using Random
 using EzXML
 using AbstractTrees
@@ -22,61 +23,6 @@ export parse_code_snippet_to_query
 # Type for {{some_code}} i.e. replacements without `::`
 const GENERIC_TYPE = "GENERIC_CODE"
 
-# Default placeholder replacements by language and type
-const DEFAULT_TYPE_REPLACEMENTS = Dict(
-    # Python replacements
-    "python" => Dict(
-        "COMMENT" => "#comment",
-        "IDENTIFIER" => "var",
-        "NUMBER" => "0",
-        "STRING" => "\"\"",
-        "VARIABLE" => "x",
-        "BOOLEAN" => "True",
-        "FUNCTION" => "def f(): pass",
-    ),
-    # Julia replacements
-    "julia" => Dict(
-        "COMMENT" => "#comment",
-        "IDENTIFIER" => "var",
-        "NUMBER" => "0",
-        "STRING" => "\"\"",
-        "VARIABLE" => "x",
-        "BOOLEAN" => "true",
-        "FUNCTION" => "function f() end",
-    ),
-    # C replacements
-    "c" => Dict(
-        "COMMENT" => "//comment",
-        "IDENTIFIER" => "var",
-        "NUMBER" => "0",
-        "STRING" => "\"\"",
-        "VARIABLE" => "x",
-        "TYPE" => "int",
-        "BOOLEAN" => "1",
-        "FUNCTION" => "void f() {}",
-    ),
-    # C# replacements
-    "c#" => Dict(
-        "COMMENT" => "//comment",
-        "IDENTIFIER" => "var",
-        "NUMBER" => "0",
-        "STRING" => "\"\"",
-        "VARIABLE" => "x",
-        "BOOLEAN" => "true",
-        "FUNCTION" => "void F() { }",
-    ),
-    # R replacements
-    "r" => Dict(
-        "COMMENT" => "#comment",
-        "IDENTIFIER" => "var",
-        "NUMBER" => "0",
-        "STRING" => "\"\"",
-        "VARIABLE" => "x",
-        "BOOLEAN" => "TRUE",
-        "FUNCTION" => "f <- function() {}",
-        "R_FORMULA" => "y~x",
-    ),
-)
 
 """
 Retrieves the comment symbol from DEFAULT_TYPE_REPLACEMENTS.
@@ -263,11 +209,9 @@ function parse_code_snippet_to_query(
     if language ∉ valid_languages
         error("Unsupported language: $language. Supported: $valid_languages")
     end
-
     # step 1: find placeholders {{capture_name::capture_type}}, {{::no_capture_type}}
     #         or {{generic_code}} with valid code
     placeholders = _extract_placeholders(code_snippet)
-
     # step 2: transform code: placeholders get replaced by correct language mapping
     transformed_code = code_snippet
     symbol_map = Dict()
@@ -281,13 +225,10 @@ function parse_code_snippet_to_query(
         transformed_code = replace(transformed_code, original => replacement)
         push!(symbol_map, replacement => (capture_type, is_capturable))
     end
-
     # step 3: parse code with treesitter
     _tree = _parse_code_to_xml_tree(transformed_code, language)
-
     # step 4: transform parsed tree to TreeQueryExpr
     query_expr = _xml_node_to_tqexpr(_tree.root, symbol_map, language)
-
     return query_expr, symbol_map, transformed_code
 end
 

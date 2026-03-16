@@ -24,27 +24,8 @@ struct ParseResult
 end
 
 """
-Map from input language to `tree-sitter` compatible language name.
+Checks that a language is available.
 """
-const LANGUAGE_MAP = Dict{String, String}(
-    "python" => "source.python",
-    "julia" => "source.julia",
-    "c" => "source.c",
-    "cs" => "source.cs",
-    "r" => "source.R"
-)
-
-"""
-Map from input language to file extensions that can be parsed.
-"""
-const FILE_EXTENSIONS = Dict{String, Vector{String}}(
-    "python" => [".py"],
-    "julia" => [".jl"],
-    "c" => [".c", ".h"],
-    "cs" => [".cs"],
-    "r" => [".r"]
-)
-
 function check_language(language, lang_map)
     return @assert language in keys(lang_map) "Unrecognized language $language, exiting..."
 end
@@ -56,7 +37,8 @@ function check_tree_sitter(;
     )
     return if system == :Linux
         @assert Sys.islinux() "This is not a Linux system."
-        @assert isfile("/usr/bin/tree-sitter") ||
+        @assert !isempty(try read(`tree-sitter --version`, String) catch; "" end) ||
+            isfile("/usr/bin/tree-sitter") ||
             isfile("/bin/tree-sitter") ||
             isfile(tree_sitter_path) "tree-sitter not found on system"
     end
@@ -167,7 +149,6 @@ function parse(dir::Directory, language::String)
     end
     return parses
 end
-
 
 """
     print_code_tree(code::String, language::String; maxdepth=100)

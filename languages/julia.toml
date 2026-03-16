@@ -1,0 +1,6 @@
+parsitter-name = "julia"
+enabled = true
+tree-sitter-scope = "source.julia"
+file-extensions = [".jl"]
+type-replacements = { COMMENT = "#comment", IDENTIFIER = "var", NUMBER = "0", STRING = "\"\"", VARIABLE = "x", BOOLEAN = "true", FUNCTION = "function f() end" }
+

@@ -12,7 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Install tree-sitter
-        run: sudo apt install -y libtree-sitter0 tree-sitter-cli
+        run: |
+          sudo apt update
+          sudo apt install -y nodejs npm
+          npm install -g tree-sitter-cli@0.25.10
       - name: Init tree-sitter
         run: tree-sitter init-config
       - name: install tree-sitter-r
