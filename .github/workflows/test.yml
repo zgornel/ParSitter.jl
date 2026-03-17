@@ -14,36 +14,42 @@ jobs:
       - name: Install tree-sitter
         run: |
           sudo apt update
-          sudo apt install -y nodejs npm
-          npm install -g tree-sitter-cli@0.25.10
+          sudo apt install -y wget
+          wget https://github.com/tree-sitter/tree-sitter/releases/download/v0.25.0/tree-sitter-linux-x64.gz
+          gunzip tree-sitter-linux-x64.gz
+          chmod +x tree-sitter-linux-x64
+          sudo mv tree-sitter-linux-x64 /usr/local/bin/tree-sitter
+          tree-sitter --version
+          mkdir ~/src/
       - name: Init tree-sitter
-        run: tree-sitter init-config
+        run: |
+          tree-sitter init-config
+          cat ~/.config/tree-sitter/config.json
       - name: install tree-sitter-r
         run: |
-          git clone https://github.com/r-lib/tree-sitter-r 
-          cd tree-sitter-r
+          git clone https://github.com/r-lib/tree-sitter-r ~/src/tree-sitter-r
+          cd ~/src/tree-sitter-r
           tree-sitter generate 
       - name: install tree-sitter-python
         run: |
-          git clone  https://github.com/tree-sitter/tree-sitter-python
-          cd tree-sitter-python
+          git clone  https://github.com/tree-sitter/tree-sitter-python ~/src/tree-sitter-python
+          cd ~/src/tree-sitter-python
           tree-sitter generate
       - name: install tree-sitter-julia
         run: |
-          git clone https://github.com/tree-sitter/tree-sitter-julia
-          cd tree-sitter-julia
+          git clone https://github.com/tree-sitter/tree-sitter-julia ~/src/tree-sitter-julia
+          cd ~/src/tree-sitter-julia
           tree-sitter generate
       - name: install tree-sitter-c
         run: |
-          git clone https://github.com/tree-sitter/tree-sitter-c
-          cd tree-sitter-c
+          git clone https://github.com/tree-sitter/tree-sitter-c ~/src/tree-sitter-c
+          cd ~/src/tree-sitter-c
           tree-sitter generate
       - name: install tree-sitter-csharp
         run: |
-          git clone https://github.com/tree-sitter/tree-sitter-c-sharp
-          cd tree-sitter-c-sharp
+          git clone https://github.com/tree-sitter/tree-sitter-c-sharp ~/src/tree-sitter-c-sharp
+          cd ~/src/tree-sitter-c-sharp
           tree-sitter generate
-        continue-on-error: true
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set up Julia 1.x
@@ -51,6 +57,10 @@ jobs:
         with:
           version: "1"
       - uses: julia-actions/julia-buildpkg@v1
+      - name: check tree-sitter languages
+        run: |
+          ls -al ~/src
+          tree-sitter dump-languages
       - uses: julia-actions/julia-runtest@v1
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v5
