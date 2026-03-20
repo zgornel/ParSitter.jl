@@ -10,10 +10,13 @@ A code query is basically [tree pattern matching](https://en.wikipedia.org/wiki/
  - **query tree** the tree which is used extract values from the target tree.
 
 # Features
- - parsing of `Python`, `Julia`, `C`, `C#` and `R` through [tree-sitter](https://tree-sitter.github.io/tree-sitter/)
- - tree matching using queries that can be expressed as `Tuple`s (in an [S-Expression](https://en.wikipedia.org/wiki/S-expression) fashion)
+ - pluggable language support through [tree-sitter](https://tree-sitter.github.io/tree-sitter/)
+ - high-level query DSL for easy code matching
+ - low-level tree matching whith queries expressed as `Tuple`s (in an [S-Expression](https://en.wikipedia.org/wiki/S-expression) fashion)
+ - tested on `Python`, `Julia`, `C`, `C#` and `R`
 
 # Installation
+
 ParSitter.jl is a registered package and can be easily installed with
 ```julia
 using Pkg; Pkg.add("ParSitter")
