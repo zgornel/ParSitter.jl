@@ -328,7 +328,6 @@ function match_tree(
                 # search linearly over target tree nodes
                 for t in c1
                     if qidx > lenc2
-                        @info "subtree found! $c2_permutation"
                         break  # break if all query trees found
                     end
                     _found, subtree_captures, _ = match_tree(

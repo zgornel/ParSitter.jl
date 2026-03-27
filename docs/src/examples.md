@@ -1,4 +1,22 @@
-# Usage examples
+# Usage
+
+TODO: Intro on tree matching - matches any tree, one needs to extract node values, provide a compare functuon, provide a capture function and one to extract values from nodes
+
+## Building trees
+
+## Support functions for matching
+
+## Tree matching
+
+
+## Querying code
+
+### The query DSL
+
+### Querying
+
+## Limitations
+
 
 ## Getting started
 

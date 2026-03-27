@@ -1,6 +1,6 @@
 # ParSitter.jl
 
-A tree-matching and code parsing library, written in Julia. Parsing based on the [tree-sitter](https://tree-sitter.github.io/tree-sitter/) library. Designed for easy parsing and querying of code ASTs.
+A code querying and parsing library, written in Julia and build on top on [tree-sitter](https://tree-sitter.github.io/tree-sitter/). Designed for quick and easy parsing and querying of code.
 
 [![License](http://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat)](LICENSE.md)
 [![Tests](https://github.com/zgornel/ParSitter.jl/actions/workflows/test.yml/badge.svg?branch=master)](https://github.com/zgornel/ParSitter.jl/actions/workflows/test.yml?query=branch%3Amaster)

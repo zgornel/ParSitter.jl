@@ -1,11 +1,32 @@
+"""
+    struct Directory
+        name::String
+    end
+
+Wrapper object around a directory name or path.
+"""
 struct Directory
     name::String
 end
 
+"""
+    struct File
+        name::String
+    end
+
+Wrapper object around a file name or path.
+"""
 struct File
     name::String
 end
 
+"""
+    struct Code
+        code::String
+    end
+
+Wrapper object around a string that is supposed to contain code.
+"""
 struct Code
     code::String
 end
@@ -31,6 +52,10 @@ function check_language(language, lang_map)
 end
 
 Base.isfile(::Nothing) = false
+
+"""
+Checks that `tree-sitter` is installed and that the operating system is `Linux`.
+"""
 function check_tree_sitter(;
         system = :Linux,
         tree_sitter_path = nothing
