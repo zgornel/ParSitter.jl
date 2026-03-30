@@ -4,8 +4,8 @@ v0.2.0
  - `:speculative` i.e. first match query support
  - Package tests with Aqua.jl
  - Add public API
- - Bugfixes
- - Minor performance improvements
+ - Bugfixes and performance improvements
+
 v0.1.0
 ------
  - Initial release
