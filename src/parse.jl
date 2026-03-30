@@ -133,7 +133,7 @@ Use `escape_chars=true` if the code contains explicitly the `\n`, `\t` and `\r`
 characters. If `print_code` is `true` it will print the code.
 
 """
-function parse(code::Code, language::String; escape_chars = false, print_code = false)
+function Base.parse(code::Code, language::String; escape_chars = false, print_code = false)
     return ParseResult(nothing, _parse(code.code, language; escape_chars, print_code))
 end
 
@@ -143,7 +143,7 @@ end
 Parsing function for `::File` objects. Reads the content of the file, sends
 it to tree-sitter for parsing and returns a `ParseResult` with  parse results.
 """
-function parse(file::File, language::String)
+function Base.parse(file::File, language::String)
     check_language(language, LANGUAGE_MAP)
     check_tree_sitter()
     _file = abspath(_normalize_fs_path(file.name))
@@ -164,7 +164,7 @@ end
 Parsing function for `::Directory` objects. Reads the contents of the directory
 and for supported files, calls the parsing method for `::File` objects.
 """
-function parse(dir::Directory, language::String)
+function Base.parse(dir::Directory, language::String)
     parses = Vector{ParseResult}()
     for (root, _, files) in walkdir(dir.name)
         for file in files
