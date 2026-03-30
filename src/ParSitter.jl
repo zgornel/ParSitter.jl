@@ -16,7 +16,8 @@ function __init__()
     return populate!(
         LANGUAGE_MAP,
         FILE_EXTENSIONS,
-        DEFAULT_TYPE_REPLACEMENTS;
+        DEFAULT_TYPE_REPLACEMENTS,
+        STRING_DELIMS;
         language_directory
     )
 end

@@ -13,7 +13,7 @@ module QueryLanguage
 
 import Base.Regex
 import ..ParSitter
-import ..ParSitter: DEFAULT_TYPE_REPLACEMENTS
+import ..ParSitter: DEFAULT_TYPE_REPLACEMENTS, STRING_DELIMS
 using Random
 using EzXML
 using AbstractTrees
@@ -61,6 +61,21 @@ function _extract_placeholders(code::String)::Vector{Tuple{String, String, Strin
     return placeholders
 end
 
+const DEFAULT_STR_CHAR = "\""
+
+function _inquote_string_value(input_string, language)
+    str_char = get(STRING_DELIMS, language, DEFAULT_STR_CHAR)
+    _, _c, _ = split(input_string, str_char)
+    return str_char * _c * "_" * randstring(10) * str_char
+end
+
+function _dequote_string_value(input_string, language)
+    str_char = get(STRING_DELIMS, language, DEFAULT_STR_CHAR)
+    _, _c, _ = split(input_string, str_char)
+    return _c[1:end-11]
+end
+
+
 """
 Generates a valid symbol name depending on original capture_name, the type and language replacements.
 """
@@ -69,16 +84,21 @@ function _generate_name(capture_name, capture_type, language)
     lang_replacements = DEFAULT_TYPE_REPLACEMENTS[language]
     @assert haskey(lang_replacements, capture_type)
     return if isempty(capture_name)
-        if capture_type ∉ ["NUMBER", "BOOLEAN"]
-            return lang_replacements[capture_type] * "_" * randstring(10)
-        else
+        if capture_type ∈ ["NUMBER", "BOOLEAN"]
             return lang_replacements[capture_type]  # numbers/booleans are not randomized
+        elseif capture_type == "STRING"
+            return _inquote_string_value(lang_replacements[capture_type], language)
+        else
+            return lang_replacements[capture_type] * "_" * randstring(10)
         end
     else
         if capture_type == "COMMENT"
             # Note: assumes NO space after comment symbol in  DEFAULT_TYPE_REPLACEMENTS
             _comment_symbol = _get_comment_symbol(language; capture_type)
             return _comment_symbol * capture_name * "_" * randstring(10)
+        elseif capture_type == "STRING"
+            str_char = get(STRING_DELIMS, language, DEFAULT_STR_CHAR)
+            return _inquote_string_value(str_char * capture_name * str_char, language)
         else
             # Symbols that are captured have the original
             # capture name in the randomized value
@@ -147,6 +167,9 @@ function _xml_node_to_tqexpr(node, symbol_map, language)
             if capture_type == "COMMENT"  # remove comment symbol from capturable name
                 _comment_symbol = _get_comment_symbol(language; capture_type)
                 node_value = replace(node_value, _comment_symbol => "")
+            end
+            if capture_type == "STRING"
+                node_value = _dequote_string_value(node_value, language)
             end
             node_value = "@" * replace(node_value, r"_.{10}$" => "")
         else

@@ -15,6 +15,11 @@ Query generation type-related placeholder replacements.
 """
 const DEFAULT_TYPE_REPLACEMENTS = Dict{String, Dict{String, String}}()
 
+"""
+String delimiters for different languages
+"""
+const STRING_DELIMS = Dict{String, String}()
+
 
 """
 Reads the contents of `language_directory` and populates the constants:
@@ -23,7 +28,8 @@ Reads the contents of `language_directory` and populates the constants:
 function populate!(
         language_map,
         all_file_extensions,
-        default_type_replacements;
+        default_type_replacements,
+        string_delims;
         language_directory = ""
     )
 
@@ -43,11 +49,13 @@ function populate!(
                 tree_sitter_scope = get(contents, "tree-sitter-scope", nothing)
                 file_extensions = get(contents, "file-extensions", nothing)
                 type_replacements = get(contents, "type-replacements", nothing)
+                string_delim = get(contents, "string-delim", nothing)
                 # Checks of the fields
                 @assert !isnothing(parsitter_name) "Missing \"parsitter-name\" field @$file"
                 @assert !isnothing(tree_sitter_scope) "Missing \"tree-sitter-scope\" field @$file"
                 @assert !isnothing(file_extensions) "Missing \"file-extensions\" field @$file"
                 @assert !isnothing(type_replacements) "Missing \"type-replacements\" field @$file"
+                @assert !isnothing(string_delim) "Missing \"string-delim\" field @$file"
                 @assert !isempty(file_extensions) "Empty\"file-extensions\" value @$file"
                 @assert !isempty(type_replacements) "Empty \"type-replacements\" value @$file"
                 # Fill in the globals
@@ -55,6 +63,7 @@ function populate!(
                     push!(language_map, parsitter_name => tree_sitter_scope)
                     push!(all_file_extensions, parsitter_name => file_extensions)
                     push!(default_type_replacements, parsitter_name => type_replacements)
+                    push!(string_delims, parsitter_name => string_delim)
                 end
             catch e
                 @warn "Could not parse language file @$full_file\n$e"

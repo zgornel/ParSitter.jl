@@ -3,4 +3,4 @@ enabled = true
 tree-sitter-scope = "source.python"
 file-extensions = [".py"]
 type-replacements = { COMMENT = "#comment", IDENTIFIER = "var", NUMBER = "0", STRING = "\"\"", VARIABLE = "x", BOOLEAN = "True", FUNCTION = "def f(): pass"}
-
+string-delim = "\""
