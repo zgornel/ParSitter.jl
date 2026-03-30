@@ -228,7 +228,7 @@ function match_tree(
     is_capture_node_t, _ = is_capture_node(target_tree)
 
     # Checks whether node values match or, we have a capture node with a capture condition
-    found::Bool = (n1 == n2) || node_comparison_yields_true(target_tree, query_tree)
+    found::Bool = isequal(n1, n2) || node_comparison_yields_true(target_tree, query_tree)
 
     # Check hashes, return if found
     _hash = hash((target_tree, query_tree))
