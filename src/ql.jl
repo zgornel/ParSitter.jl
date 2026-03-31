@@ -72,7 +72,7 @@ end
 function _dequote_string_value(input_string, language)
     str_char = get(STRING_DELIMS, language, DEFAULT_STR_CHAR)
     _, _c, _ = split(input_string, str_char)
-    return _c[1:end-11]
+    return _c[1:(end - 11)]
 end
 
 

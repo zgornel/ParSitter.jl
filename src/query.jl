@@ -323,7 +323,8 @@ function match_tree(
             lenc2 = length(c2)
             # seach over all query nodes permutations
             for c2_permutation in unique(permutations(c2))
-                _captured_symbols = MultiDict()  # or reuse a temp one
+                _captured_symbols = MultiDict()  # corresponds to `captured_symbols` in recursion
+                _t_captures = MultiDict()        # accumulates captures if subtrees are found
                 qidx = 1
                 # search linearly over target tree nodes
                 for t in c1
@@ -342,13 +343,16 @@ function match_tree(
                         node_comparison_yields_true
                     )
                     if _found
-                        merge!(captured_symbols, subtree_captures)
                         qidx += 1
+                        merge!(_t_captures, subtree_captures)
                     end
                 end
-                qidx > lenc2 && begin
+                if qidx > lenc2
+                    merge!(captured_symbols, _t_captures)
                     push!(subtrees_found, true)
                     break
+                else
+                    push!(subtrees_found, false)
                 end
             end
             found &= any(subtrees_found)

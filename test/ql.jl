@@ -298,4 +298,34 @@
             @test qres[k][1].v == correct_val
         end
     end
+
+    @testset "match_type=:speculative, test correct capturing" begin
+        test_val = "AA"
+        R_code = ParSitter.Code(
+            """
+            # a comment
+            z <- "$test_val"
+            y <- "BB"
+            """
+        )
+        language = "r"
+        _parsed = ParSitter.parse(R_code, language)
+        target = ParSitter.build_xml_tree(_parsed)
+        query_snippet = """
+            z <- {{a_string::STRING}}
+        """
+        generated_query, _, _ = ParSitter.QueryLanguage.parse_code_snippet_to_query(query_snippet, language)
+        query_results = ParSitter.query(
+            target.root,
+            generated_query;
+            match_type = :speculative,
+            target_tree_nodevalue = _target_nodevalue,
+            query_tree_nodevalue = _query_nodevalue,
+            capture_function = _capture_function,
+            node_comparison_yields_true = _apply_regex_glob
+        )
+        filter!(first, query_results) # keep only matches
+        @test length(query_results) == 1  # single match
+        @test first(get_capture(query_results, "a_string")).v == "\"$test_val\""
+    end
 end
