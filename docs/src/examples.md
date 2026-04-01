@@ -11,13 +11,14 @@
     The difference between _matching_ and _querying_ is that matching attempts to match trees starting from the root and progressing recursively towards the leafs while querying matches a query tree with all possible sub-trees of a target tree.
 
 ### Support functions for matching
-Because matching or querying trees can be done on very different trees (some tree nodes may be complex objects), the querying and matching functions rely on five helper functions. These are provided to the `ParSitter.match_tree` and `ParSitter.query` matching and querying functions as keyword arguments:
+Because matching or querying trees can be done on very different trees (some tree nodes may be complex objects), the querying and matching functions rely on six helper functions. These are provided to the `ParSitter.match_tree` and `ParSitter.query` matching and querying functions as keyword arguments:
  - `targe_tree_nodevalue`: extract the target tree node's value
  - `query_tree_nodevalue`: extract the query tree node's value
  - `capture_function`: extract captured values from matched target nodes
  - `node_comparison_yields_true`: make two nodes always match; this is useful when one wants to skip node comparison i.e. capture nodes or explicitly ignore nodes
  - `is_capture_node`: check is a node is a capture node or not
-There is no function that tests for node equality: the extracted values of the target and query nodes must be equal through the `isequal` function. With the help of the functions, the matching function becomes generic: one can match arbitrarily complex trees by extracting the values to be matched from the nodes, provide custom capture symbols and arbitrary conditions for skipping nodes from comparison.
+ - `node_equality_function`: compares the values of target and query nodes
+With the help of the functions, the matching function becomes generic: one can match arbitrarily complex trees by extracting the values to be matched from the nodes, applying the equality function over the values and use custom capture symbols and arbitrary conditions for skipping nodes from comparison.
 
 ## Building trees
 
