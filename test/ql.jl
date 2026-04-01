@@ -1,10 +1,47 @@
 @testset "Query language (R support)" begin
     # Query helper functions
-    #_target_nodevalue(n) = strip(string(n.name))
-    _target_nodevalue(n) = strip(replace(n.content, r"[\s]" => ""))
-    _query_nodevalue(n) = ifelse(ParSitter.is_capture_node(n).is_match, string(split(n.head, "@")[1]), n.head)
-    _apply_regex_glob(tn, qn) = ParSitter.is_capture_node(qn; capture_sym = "@").is_match || qn.head == "*"
-    _capture_function(n) = (v = strip(replace(n.content, r"[\s]" => "")), srow = n["srow"], erow = n["erow"], scol = n["scol"], ecol = n["ecol"])
+    function _target_nodevalue(n)
+        return (
+            string.(strip(replace(n.content, r"[\s]" => ""))), # node content (string with spaces removed)
+            n.name,  # tree-sitter type
+        )
+    end
+
+    function _query_nodevalue(n)
+        _node_value = if ParSitter.is_capture_node(n).is_match
+            string(split(n.head.value, "@")[1])
+        else
+            n.head.value
+        end
+        return _node_value, n.head.type  # node value and type
+    end
+
+    function _capture_function(n)
+        return (
+            v = strip(replace(n.content, r"[\s]" => "")),
+            srow = n["srow"],
+            erow = n["erow"],
+            scol = n["scol"],
+            ecol = n["ecol"],
+        )
+    end
+
+    function _capture_on_empty_query_value(tn, qn)
+        return (
+            ParSitter.is_capture_node(qn; capture_sym = "@").is_match &&
+                isempty(first(_query_nodevalue(qn)))
+        ) ||
+            first(_query_nodevalue(qn)) == "*"
+    end
+
+    function _node_equality_function(n1, n2)
+        if n2[2] in ("string", "identifier")  # check query capturabile types
+            return n1[2] == n2[2] && n1[1] == n2[1] # type and value equality
+        else
+            return n1[1] == n2[1]  # value equality
+        end
+    end
+
     R_code = ParSitter.Code(
         """
         # a comment
@@ -33,7 +70,7 @@
             target_tree_nodevalue = _target_nodevalue,
             query_tree_nodevalue = _query_nodevalue,
             capture_function = _capture_function,
-            node_comparison_yields_true = _apply_regex_glob
+            node_comparison_yields_true = _capture_on_empty_query_value
         )
         filter!(first, query_results) # keep only matches
         @test length(query_results) == 0  # no match
@@ -57,7 +94,7 @@
             target_tree_nodevalue = _target_nodevalue,
             query_tree_nodevalue = _query_nodevalue,
             capture_function = _capture_function,
-            node_comparison_yields_true = _apply_regex_glob
+            node_comparison_yields_true = _capture_on_empty_query_value
         )
         filter!(first, query_results) # keep only matches
         @test length(query_results) == 0  # no match
@@ -82,7 +119,7 @@
             target_tree_nodevalue = _target_nodevalue,
             query_tree_nodevalue = _query_nodevalue,
             capture_function = _capture_function,
-            node_comparison_yields_true = _apply_regex_glob
+            node_comparison_yields_true = _capture_on_empty_query_value
         )
         filter!(first, query_results) # keep only matches
         @test length(query_results) == 1  # single match
@@ -120,7 +157,7 @@
             target_tree_nodevalue = _target_nodevalue,
             query_tree_nodevalue = _query_nodevalue,
             capture_function = _capture_function,
-            node_comparison_yields_true = _apply_regex_glob
+            node_comparison_yields_true = _capture_on_empty_query_value
         )
         filter!(first, query_results) # keep only matches
         @test length(query_results) == 1  # single match
@@ -156,7 +193,7 @@
             target_tree_nodevalue = _target_nodevalue,
             query_tree_nodevalue = _query_nodevalue,
             capture_function = _capture_function,
-            node_comparison_yields_true = _apply_regex_glob
+            node_comparison_yields_true = _capture_on_empty_query_value
         )
         filter!(first, query_results) # keep only matches
         @test length(query_results) == 1  # single match
@@ -187,7 +224,7 @@
             target_tree_nodevalue = _target_nodevalue,
             query_tree_nodevalue = _query_nodevalue,
             capture_function = _capture_function,
-            node_comparison_yields_true = _apply_regex_glob
+            node_comparison_yields_true = _capture_on_empty_query_value
         )
         filter!(first, query_results) # keep only matches
         @test length(query_results) == 1  # single match
@@ -198,6 +235,36 @@
         for (k, correct_val) in CORRECT_CAPTURES
             @test qres[k][1].v == correct_val
         end
+    end
+
+    @testset "match_type=:nonstrict, custom node equality" begin
+        R_code_2 = ParSitter.Code(
+            """
+            # a comment
+            z <- "AA"
+            y <- "BB"
+            """
+        )
+        language = "r"
+        _parsed = ParSitter.parse(R_code_2, language)
+        target = ParSitter.build_xml_tree(_parsed)
+        query_snippet = """
+            {{::IDENTIFIER}} <- {{a_string::STRING}}
+        """
+        generated_query, _, _ = ParSitter.QueryLanguage.parse_code_snippet_to_query(query_snippet, language)
+        query_results = ParSitter.query(
+            target.root,
+            generated_query;
+            match_type = :nonstrict,
+            target_tree_nodevalue = _target_nodevalue,
+            query_tree_nodevalue = _query_nodevalue,
+            capture_function = _capture_function,
+            node_comparison_yields_true = _capture_on_empty_query_value,
+            node_equality_function = _node_equality_function
+        )
+        filter!(first, query_results) # keep only matches
+        @test length(query_results) == 1  # single match
+        @test length(query_results[1][2]["a_string"]) == 2 # both "AA" and "BB" captured
     end
 
     # Speculative querying
@@ -219,7 +286,8 @@
             target_tree_nodevalue = _target_nodevalue,
             query_tree_nodevalue = _query_nodevalue,
             capture_function = _capture_function,
-            node_comparison_yields_true = _apply_regex_glob
+            node_comparison_yields_true = _capture_on_empty_query_value,
+            node_equality_function = _node_equality_function
         )
         filter!(first, query_results) # keep only matches
         @test length(query_results) == 1  # single match
@@ -255,7 +323,8 @@
             target_tree_nodevalue = _target_nodevalue,
             query_tree_nodevalue = _query_nodevalue,
             capture_function = _capture_function,
-            node_comparison_yields_true = _apply_regex_glob
+            node_comparison_yields_true = _capture_on_empty_query_value,
+            node_equality_function = _node_equality_function
         )
         filter!(first, query_results) # keep only matches
         @test length(query_results) == 1  # single match
@@ -286,7 +355,7 @@
             target_tree_nodevalue = _target_nodevalue,
             query_tree_nodevalue = _query_nodevalue,
             capture_function = _capture_function,
-            node_comparison_yields_true = _apply_regex_glob
+            node_comparison_yields_true = _capture_on_empty_query_value
         )
         filter!(first, query_results) # keep only matches
         @test length(query_results) == 1  # single match
@@ -301,7 +370,7 @@
 
     @testset "match_type=:speculative, test correct capturing" begin
         test_val = "AA"
-        R_code = ParSitter.Code(
+        R_code_2 = ParSitter.Code(
             """
             # a comment
             z <- "$test_val"
@@ -309,7 +378,7 @@
             """
         )
         language = "r"
-        _parsed = ParSitter.parse(R_code, language)
+        _parsed = ParSitter.parse(R_code_2, language)
         target = ParSitter.build_xml_tree(_parsed)
         query_snippet = """
             z <- {{a_string::STRING}}
@@ -322,10 +391,40 @@
             target_tree_nodevalue = _target_nodevalue,
             query_tree_nodevalue = _query_nodevalue,
             capture_function = _capture_function,
-            node_comparison_yields_true = _apply_regex_glob
+            node_comparison_yields_true = _capture_on_empty_query_value
         )
         filter!(first, query_results) # keep only matches
         @test length(query_results) == 1  # single match
         @test first(get_capture(query_results, "a_string")).v == "\"$test_val\""
+    end
+
+    @testset "match_type=:speculative, custom node equality" begin
+        R_code_2 = ParSitter.Code(
+            """
+            # a comment
+            z <- "AA"
+            y <- "BB"
+            """
+        )
+        language = "r"
+        _parsed = ParSitter.parse(R_code_2, language)
+        target = ParSitter.build_xml_tree(_parsed)
+        query_snippet = """
+            {{::IDENTIFIER}} <- {{a_string::STRING}}
+        """
+        generated_query, _, _ = ParSitter.QueryLanguage.parse_code_snippet_to_query(query_snippet, language)
+        query_results = ParSitter.query(
+            target.root,
+            generated_query;
+            match_type = :speculative,
+            target_tree_nodevalue = _target_nodevalue,
+            query_tree_nodevalue = _query_nodevalue,
+            capture_function = _capture_function,
+            node_comparison_yields_true = _capture_on_empty_query_value,
+            node_equality_function = _node_equality_function
+        )
+        filter!(first, query_results) # keep only matches
+        @test length(query_results) == 1  # single match
+        @test length(query_results[1][2]["a_string"]) == 1  # either "AA" or "BB" captured
     end
 end

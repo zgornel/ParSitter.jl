@@ -13,7 +13,7 @@ module QueryLanguage
 
 import Base.Regex
 import ..ParSitter
-import ..ParSitter: DEFAULT_TYPE_REPLACEMENTS, STRING_DELIMS
+import ..ParSitter: TreeQueryNode, DEFAULT_TYPE_REPLACEMENTS, STRING_DELIMS
 using Random
 using EzXML
 using AbstractTrees
@@ -153,16 +153,17 @@ end
 
 """
 Function that transforms an XML tree into a `TreeQueryExpr` based on the
-information from symbol mappings.
+information from symbol mappings. Returns a `TreeQueryExpr{TreeQueryNode}`.
 """
 function _xml_node_to_tqexpr(node, symbol_map, language)
-    node_name = node.name
+    node_type = node.name
     node_content = strip(replace(node.content, r"\s" => ""))
     node_value = node_content
     skip_children = false
     if node_content in keys(symbol_map)
         capture_type, is_capturable = symbol_map[node_content]
         # We are dealing with an expression generated
+        capture_type == "R_FORMULA" && (skip_children = true)
         if is_capturable
             if capture_type == "COMMENT"  # remove comment symbol from capturable name
                 _comment_symbol = _get_comment_symbol(language; capture_type)
@@ -173,15 +174,12 @@ function _xml_node_to_tqexpr(node, symbol_map, language)
             end
             node_value = "@" * replace(node_value, r"_.{10}$" => "")
         else
-            if capture_type == "R_FORMULA"
-                skip_children = true
-            end
             node_value = "*"
         end
     else
         # This is a node that was not inserted by us or,
         # a node in a sub-tree of a generated expression
-        if node_name == "identifier"  # this is a tree-sitter node type
+        if node_type == "identifier"  # this is a tree-sitter node type
             node_value = node_content
         else
             node_value = "*"
@@ -193,7 +191,8 @@ function _xml_node_to_tqexpr(node, symbol_map, language)
             push!(child_exprs, _xml_node_to_tqexpr(child, symbol_map, language))
         end
     end
-    return ParSitter.TreeQueryExpr(node_value, child_exprs)
+    _node = TreeQueryNode(node_value, node_type)
+    return ParSitter.TreeQueryExpr(_node, child_exprs)
 end
 
 

@@ -40,6 +40,24 @@ AbstractTrees.prevsibling(t::EzXML.Node) = EzXML.prevelement(t)
 
 # AbstractTrees interface for Tuple-based S-expressions (query trees)
 """
+	TreeQueryNode(value::String, type:String)
+
+Structure used for holding values and types for query nodes
+generated from tree-sitter parsed code.
+"""
+@auto_hash_equals struct TreeQueryNode
+    value::String
+    type::Union{Nothing, String}  # tree-sitter node types
+end
+
+_query_node_value(node::Any) = node
+_query_node_value(node::TreeQueryNode) = node.value
+
+_query_node_type(node::Any) = nothing
+_query_node_type(node::TreeQueryNode) = node.type
+
+
+"""
 	TreeQueryExpr{T}(head::T, children::Vector{TreeQueryExpr})
 
 Structure used for the `AbstractTrees` interface. It allows to use
@@ -51,7 +69,7 @@ used for the head as well as children. Usually, nodes are `::String`s.
     children::Vector{TreeQueryExpr}
 end
 
-AbstractTrees.nodevalue(se::TreeQueryExpr) = se.head
+AbstractTrees.nodevalue(se::TreeQueryExpr) = _query_node_value(se.head)
 AbstractTrees.children(se::TreeQueryExpr) = se.children
 
 """
@@ -176,7 +194,12 @@ function is_capture_node(n::AbstractString; capture_sym = DEFAULT_CAPTURE_SYM)
     return (is_match = false, capture_key = "")
 end
 
-is_capture_node(n::TreeQueryExpr{<:AbstractString}; capture_sym = DEFAULT_CAPTURE_SYM) = is_capture_node(n.head; capture_sym)
+is_capture_node(n::TreeQueryExpr{<:AbstractString}; capture_sym = DEFAULT_CAPTURE_SYM) =
+    is_capture_node(n.head; capture_sym)
+
+is_capture_node(n::TreeQueryExpr{TreeQueryNode}; capture_sym = DEFAULT_CAPTURE_SYM) =
+    is_capture_node(_query_node_value(n.head); capture_sym)
+
 is_capture_node(n; capture_sym = DEFAULT_CAPTURE_SYM) = (is_match = false, capture_key = "")
 
 
