@@ -1,4 +1,6 @@
-module ParSitterApp
+using Pkg
+project_root_path = abspath(dirname(@__FILE__))
+Pkg.activate(project_root_path)
 
 using Logging
 using ParSitter
@@ -32,10 +34,30 @@ function get_arguments(args::Vector{String})
 end
 
 
-############################
-# Main entrypoint function #
-############################
-function @main(ARGS)
+function JSON.lower(r::ParSitter.ParseResult)
+    _file = ifelse(isnothing(r.file), "", r.file)
+    Dict("file" => _file, "parsed" => r.parsed)
+end
+
+function JSON.lower(vr::Vector{ParSitter.ParseResult})
+    [JSON.lower(r) for r in vr]
+end
+
+
+########################
+# Main module function #
+########################
+function julia_main()::Cint  # for compilation to executable
+    try
+        real_main()          # actual main function
+    catch
+        Base.invokelatest(Base.display_error, Base.catch_stack())
+        return 1
+    end
+    return 0
+end
+
+function real_main()
     # Parse command line arguments
     args = get_arguments(ARGS)
 
@@ -80,4 +102,13 @@ function @main(ARGS)
     return 0
 end
 
-end  # module
+
+##############
+# Run client #
+##############
+
+main_script_file = abspath(PROGRAM_FILE)
+
+if occursin("debugger", main_script_file) || main_script_file == @__FILE__
+    real_main()
+end
