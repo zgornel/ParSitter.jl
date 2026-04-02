@@ -11,20 +11,21 @@
     The difference between _matching_ and _querying_ is that matching attempts to match trees starting from the root and progressing recursively towards the leafs while querying matches a query tree with all possible sub-trees of a target tree.
 
 ### Support functions for matching
-Because matching or querying trees can be done on very different trees (some tree nodes may be complex objects), the querying and matching functions rely on six helper functions. These are provided to the `ParSitter.match_tree` and `ParSitter.query` matching and querying functions as keyword arguments:
+Because matching or querying trees can be done on very different trees (some tree nodes may be complex objects), the querying and matching functions rely on six helper functions. These are provided to the [`match_tree`](@ref) and [`query`](@ref) matching and querying functions as keyword arguments:
  - `targe_tree_nodevalue`: extract the target tree node's value
  - `query_tree_nodevalue`: extract the query tree node's value
  - `capture_function`: extract captured values from matched target nodes
  - `node_comparison_yields_true`: make two nodes always match; this is useful when one wants to skip node comparison i.e. capture nodes or explicitly ignore nodes
  - `is_capture_node`: check is a node is a capture node or not
  - `node_equality_function`: compares the values of target and query nodes
-With the help of the functions, the matching function becomes generic: one can match arbitrarily complex trees by extracting the values to be matched from the nodes, applying the equality function over the values and use custom capture symbols and arbitrary conditions for skipping nodes from comparison.
+
+With the help of the functions, the matching function becomes generic as it becomes possible to match arbitrarily complex trees: node values are extracted from nodes, the equality function over extracted values, custom capture symbols and wild-cards are applied through the conditions for skipping nodes from comparison. Finally, custom value capture is applied for nodes of matching target sub-trees.
 
 ## Building trees
 
 ### Query trees
 
-The library defines a single structure for working with query trees, a **tree-query-expression**, through `TreeQueryExpr` object. It is a simple object whose purpose is to adhere to the `AbstractTrees.jl` interface. Query trees can be constructed from `Tuples` or `NTuples`
+The library defines a single structure for working with query trees, a **tree-query-expression**, through [`ParSitter.TreeQueryExpr`](@ref) object. It is a simple object whose purpose is to adhere to the `AbstractTrees.jl` interface. Query trees can be constructed from `Tuples` or `NTuples`
 ```@repl index
 using ParSitter, AbstractTrees
 tt = (1,2,(3,(4,5,(6,),7,5)));
@@ -44,14 +45,14 @@ print_tree(tq)
 
 ### Code trees
 
-Code is represented as `EzXML.Node objects`. Therefore code querying will resort to matching `::TreeQueryExpr`-based trees with `::EzXML.Node`-based trees.
+Code is represented as `EzXML.Node` objects. Therefore code querying will resort to matching `::TreeQueryExpr`-based trees with `::EzXML.Node`-based trees.
 This is because under the hood, ParSitter relies on `tree-sitter` to parse code through the following sequence of operations:
  - shell out from Julia and run `tree-sitter` on either code i.e. a string, file content or directory
  - `tree-sitter` parses the code and outputs an XML string that contains the code AST
  - the XML AST content is read back into Julia
  - `EzXML` parses the XML and outputs an `EzXML.Node` object.
 
-In order to parse code, files and directories one needs to wrap wither the code's string, file path of directory path into `::Code`, `::File` and `::Directory` objects respectively.
+In order to parse code, files and directories one needs to wrap wither the code's string, file path of directory path into [`ParSitter.Code`](@ref), [`ParSitter.File`](@ref) and [`ParSitter.Directory`](@ref) objects respectively.
 ```@repl index
 code = ParSitter.Code("def hello(): pass")
 result = parse(code, "python")
@@ -146,8 +147,7 @@ map(t->t[1:2], r)
 
 ### The `:speculative` match mode
 
-!!! compat
-    This feature is only available if **v.0.2.0**
+!!! compat "This feature is only available if v0.2.0"
 
 The `:speculative` matching mode is faster that `:nonstrict` because it stops after the first sub-tree match at each level during the recursive search. The result is that it will return a single value for each named capture even if more could be retrieved.
 ```@repl index
@@ -187,16 +187,14 @@ More examples of tree-matching behavior can be found in the [query tests](https:
 
 ### Query DSL
 
-!!! compat
-    This feature is only available if **v.0.2.0**
+!!! compat "This feature is only available if v0.2.0"
 
-The cc-ql branch introduces QueryLanguage, a high-level DSL for writing queries as real code snippets with placeholders. This is the primary new feature for intuitive, language-native querying.
-
-Placeholders:
- - `{{capture_name::capture_type}}` - named capture (extracts value into capture_name).
- - `{{::capture_type}}` - non-capturing placeholder (matches tree structure only).
+A high-level DSL for writing queries as real code snippets with placeholders aimed ad intuitive, language-native querying is available on top of the low-level S-Tuple based querying. It is based on the concept that querying code should be done with real code snippets. The locations or _placeholders_ where code is to be captured or ignored are marked with `{{}}`. Currently, the current query string placeholders are supported:
+ - `{{capture_name::CAPTURE_TYPE}}` - named capture (extracts value into capture_name).
+ - `{{::CAPTURE_TYPE}}` - non-capturing placeholder (matches tree structure only).
  - `{{some_valid_code}}` - Generic code insertion (use `custom_replacements` argument), non-capturing.
-Supported capture type values depend on the language (via `DEFAULT_TYPE_REPLACEMENTS`). These are themselves configurable in the `/languages` folder.
+
+
 
 ```@repl index
 using ParSitter.QueryLanguage, AbstractTrees
@@ -220,13 +218,14 @@ print_tree(query_expr)
 ```
 
 How query generation from snippet works internally:
- - placeholders are replaced with valid language-specific code (e.g., randomized identifiers or type-specific literals).
+ - placeholders are replaced with valid language-specific code (e.g., randomized identifiers or type-specific literals). Supported `CAPTURE_TYPE`s and associated code are present in [`ParSitter.DEFAULT_TYPE_REPLACEMENTS`](@ref)) and loaded from the [`languages/`](https://github.com/zgornel/ParSitter.jl/tree/master/languages) directory.
  - the snippet is parsed with tree-sitter to an XML AST.
- - the XML AST is parsed to an `EzXML` tree and converted to `TreeQueryExpr` where:
+ - the XML AST is parsed to an `EzXML` tree and converted to [`ParSitter.TreeQueryExpr`](@ref) where:
+     - each node is a [`ParSitter.TreeQueryNode`](@ref) containing value and type. The types of query nodes will be node types supported by tree-sitter exclusively.
      - captures become `@capture_name`.
      - Non-captures become wildcards ("*")
      - structure is preserved exactly.
- - The final generated query can be used with `match_tree` or `query`.
+ - The final generated query can be used with [`match_tree`](@ref) or [`query`](@ref).
 
 ### Querying code
 
@@ -234,8 +233,8 @@ Below is a minimal example of querying a snippet of code written in R.
 ```@repl index
 using ParSitter, AbstractTrees
 _target_nodevalue(n) = strip(replace(n.content, r"[\s]" => ""));
-_query_nodevalue(n) = ifelse(ParSitter.is_capture_node(n).is_match, string(split(n.head, "@")[1]), n.head);
-_apply_regex_glob(tn, qn) = ParSitter.is_capture_node(qn; capture_sym = "@").is_match || qn.head == "*";
+_query_nodevalue(n) = ifelse(ParSitter.is_capture_node(n).is_match, string(split(n.head.value, "@")[1]), n.head.value);
+_apply_regex_glob(tn, qn) = ParSitter.is_capture_node(qn; capture_sym = "@").is_match || qn.head.value == "*";
 _capture_function(n) = (v = strip(replace(n.content, r"[\s]" => "")), srow = n["srow"], erow = n["erow"], scol = n["scol"], ecol = n["ecol"]);
 
 R_code = ParSitter.Code(
@@ -256,7 +255,7 @@ query_snippet = """
                                   family ={{family::IDENTIFIER}}({{identifier::IDENTIFIER}}={{id_val::STRING}}))
 """
 generated_query, _, _ = ParSitter.QueryLanguage.parse_code_snippet_to_query(query_snippet, language)
-
+print_tree(generated_query, maxdepth=10)
 query_results = ParSitter.query(
     target.root,
     generated_query;
@@ -272,7 +271,7 @@ println(query_results[1][2])
 More examples of tree-matching behavior can be found in the [query language tests](https://github.com/zgornel/ParSitter.jl/blob/master/test/ql.jl).
 
 ## CLI-based parsing
-**ParSitter.jl** comes with an app that allows easy parsing of inline code, files and directories. Currently, it supports the following languages: [Python](https://www.python.org/), [Julia](https://julialang.org/), [C](https://en.wikipedia.org/wiki/C_(programming_language)), [C#](https://en.wikipedia.org/wiki/C_Sharp_(programming_language)) and [R](https://www.r-project.org/)
+**ParSitter.jl** comes with an CLI tool that allows easy parsing of inline code, files and directories. Currently, it supports the following languages: [Python](https://www.python.org/), [Julia](https://julialang.org/), [C](https://en.wikipedia.org/wiki/C_(programming_language)), [C#](https://en.wikipedia.org/wiki/C_Sharp_(programming_language)) and [R](https://www.r-project.org/). This can be extended by adding more language files in [`languages/`](https://github.com/zgornel/ParSitter.jl/tree/master/languages).
 
 ### Installing `tree-sitter` languages
 In order to be able to parse code, `tree-sitter` and plugins for specific languages need to be installed. For example, to install the python language parser and Assuming that we want to install it to a directory named `_parsers`, located in the current directory, the following sequence of commands should do it:
@@ -283,10 +282,29 @@ cd tree-sitter-python
 tree-sitter generate
 ```
 
-### Running the CLI app
+### Running the CLI tool
 When ran, it returns a JSON string of the form:
 ```
 { "path/to/file":"parsed code in XML format",
   ...
 }
+```
+For directories the JSON will contain more key-value pairs and for inline code the file path key is an empty string. For example, the following command
+```sh
+julia --project parsitter.jl ./test/code/python/test_project/main.py --input-type file --language python --log-level error
+```
+will result in
+```
+{".../ParSitter.jl/test/code/python/test_project/main.py":"<?xml version=\"1.0\"?><module srow=\"0\" scol=\"0\" erow=\"15\" ecol=\"0\">  <import_from_sta...
+}
+```
+ > Note the `--escape-chars` option should be used if parsing inline code with `\n`, '\t' or '\r' characters.
+
+For example the following works,
+```sh
+$ julia parsitter.jl 'def foo():pass' --input-type code --language python --log-level debug
+```
+however if escape chars are present, use the `--escape-chars` option:
+```sh
+$ julia parsitter.jl 'def foo():\n\tpass' --input-type code --escape-chars --language python --log-level debug
 ```
