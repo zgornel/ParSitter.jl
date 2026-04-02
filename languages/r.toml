@@ -1,0 +1,6 @@
+parsitter-name = "r"
+enabled = true
+tree-sitter-scope = "source.R"
+file-extensions = [".r", ".R"]
+type-replacements = { COMMENT = "#comment", IDENTIFIER = "var", NUMBER = "0", STRING = "\"\"", VARIABLE = "x", BOOLEAN = "TRUE", FUNCTION = "f <- function() {}", R_FORMULA = "y~x"}
+string-delim = "\""

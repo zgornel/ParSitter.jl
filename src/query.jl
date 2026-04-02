@@ -4,8 +4,6 @@ using Combinatorics
 using DataStructures
 using AutoHashEquals
 
-const DEFAULT_CAPTURE_SYM = "@"
-
 _strip_spaces(text; maxlen = 80) = begin
     _txt = replace(text, r"[\s]+" => " ")
     _txt[1:min(maxlen, length(_txt))]
@@ -42,6 +40,24 @@ AbstractTrees.prevsibling(t::EzXML.Node) = EzXML.prevelement(t)
 
 # AbstractTrees interface for Tuple-based S-expressions (query trees)
 """
+	TreeQueryNode(value::String, type:String)
+
+Structure used for holding values and types for query nodes
+generated from tree-sitter parsed code.
+"""
+@auto_hash_equals struct TreeQueryNode
+    value::String
+    type::Union{Nothing, String}  # tree-sitter node types
+end
+
+_query_node_value(node::Any) = node
+_query_node_value(node::TreeQueryNode) = node.value
+
+_query_node_type(node::Any) = nothing
+_query_node_type(node::TreeQueryNode) = node.type
+
+
+"""
 	TreeQueryExpr{T}(head::T, children::Vector{TreeQueryExpr})
 
 Structure used for the `AbstractTrees` interface. It allows to use
@@ -53,7 +69,7 @@ used for the head as well as children. Usually, nodes are `::String`s.
     children::Vector{TreeQueryExpr}
 end
 
-AbstractTrees.nodevalue(se::TreeQueryExpr) = se.head
+AbstractTrees.nodevalue(se::TreeQueryExpr) = _query_node_value(se.head)
 AbstractTrees.children(se::TreeQueryExpr) = se.children
 
 """
@@ -65,7 +81,7 @@ head of the expression, the rest are children.
 """
 build_tq_tree(v::T) where {T} = TreeQueryExpr(v, TreeQueryExpr[])
 build_tq_tree(t::TreeQueryExpr) = t
-build_tq_tree(t::NTuple{N, T}) where {N, T} = begin
+build_tq_tree(t::NTuple{N, T}) where {N <: Int, T <: Any} = begin
     if length(t) == 1
         return TreeQueryExpr{T}(t[1], TreeQueryExpr{T}[])
     elseif length(t) > 1
@@ -94,7 +110,7 @@ Base.convert(
     t::S;
     nodevalue = AbstractTrees.nodevalue,
     children = AbstractTrees.children
-) where {S} = begin
+) where {S <: Tuple} = begin
     c = children(t)
     if length(c) > 0
         return TreeQueryExpr(nodevalue(t), TreeQueryExpr[Base.convert(TreeQueryExpr, ci; nodevalue) for ci in c])
@@ -111,7 +127,7 @@ Base.convert(
     t::S;
     nodevalue = AbstractTrees.nodevalue,  # note: this is apparently not used
     children = AbstractTrees.children     # and the default AbstractTrees.nodevalue is used
-) where {S} = begin
+) where {S <: Union{Tuple, TreeQueryExpr}} = begin
     _destructure(t) = ifelse(length(t) == 1, first(t), t)
     c = children(t)
     if length(c) > 1
@@ -123,6 +139,7 @@ Base.convert(
     end
 end
 
+Base.convert(::Type{Tuple}, t::S) where {S <: Tuple} = t  # Fix from Aqua.jl
 
 """
 Checks that a query tree does not contain duplicate capture keys.
@@ -136,13 +153,25 @@ end
 """
     build_xml_tree(tree_sitter_xml_ast::String)
 
-Postprocesses and parse the tree-sitter XML output to
-something that can be traversed to match a given query.
+Builds an XML tree out of the XML output from tree-sitter.
+Internally, calls `EzXML.parsexml`.
 """
 function build_xml_tree(tree_sitter_xml_ast::String)
     tmp = replace(tree_sitter_xml_ast, "\n" => "")
     return xml = EzXML.parsexml(tmp)
 end
+
+"""
+    build_xml_tree(parse_output::ParseResult)
+
+Builds an XML tree out of the parsing results contained in a `::ParseResult` object.
+"""
+build_xml_tree(parse_output::ParseResult) = build_xml_tree(parse_output.parsed)
+
+
+const DEFAULT_CAPTURE_SYM = "@"
+const CAPTURE_REGEX = Regex("[.]*$(DEFAULT_CAPTURE_SYM)[.]*")
+
 
 """
     is_capture_node(n; capture_sym=DEFAULT_CAPTURE_SYM)
@@ -157,12 +186,20 @@ julia> ParSitter.is_capture_node("value@capture_key", capture_sym="@@")
 (is_match = false, capture_key = nothing)
 ```
 """
-is_capture_node(n::T; capture_sym = DEFAULT_CAPTURE_SYM) where {T <: AbstractString} = begin
-    is_match = !isnothing(match(Regex("[.]*$(capture_sym)[.]*"), n))
-    capture_key = is_match ? string(split(n, capture_sym)[2]) : ""
-    return (; is_match, capture_key)
+function is_capture_node(n::AbstractString; capture_sym = DEFAULT_CAPTURE_SYM)
+    if occursin(capture_sym, n)
+        parts = split(n, capture_sym)
+        return (is_match = true, capture_key = string(parts[end]))
+    end
+    return (is_match = false, capture_key = "")
 end
-is_capture_node(n::TreeQueryExpr{<:AbstractString}; capture_sym = DEFAULT_CAPTURE_SYM) = is_capture_node(n.head; capture_sym)
+
+is_capture_node(n::TreeQueryExpr{<:AbstractString}; capture_sym = DEFAULT_CAPTURE_SYM) =
+    is_capture_node(n.head; capture_sym)
+
+is_capture_node(n::TreeQueryExpr{TreeQueryNode}; capture_sym = DEFAULT_CAPTURE_SYM) =
+    is_capture_node(_query_node_value(n.head); capture_sym)
+
 is_capture_node(n; capture_sym = DEFAULT_CAPTURE_SYM) = (is_match = false, capture_key = "")
 
 
@@ -176,21 +213,34 @@ is_capture_node(n; capture_sym = DEFAULT_CAPTURE_SYM) = (is_match = false, captu
                         target_tree_nodevalue=AbstractTrees.nodevalue,
                         query_tree_nodevalue=AbstractTrees.nodevalue,
                         capture_function=AbstractTrees.nodevalue,
-                        node_comparison_yields_true=(args...)->false)
+                        node_comparison_yields_true=(args...)->false,
+                        node_equality_function = Base.isequal)
 
-Function that searches a `query_tree` into a `target_tree`. It returns a vector
-of sub-tree matches, where each element is a `Tuple` that contains the result
-of the match, any captured values and the trees that were compared.
+Function that searches a `query_tree` into a `target_tree`.
+It returns a vector of sub-tree matches, where each element is a `Tuple` that contains:
+ • the result of the match
+ • any captured values
+ • the trees that were compared.
+
 To capture a value, the function `is_capture_node` must return `true` for a given query node.
-One example is using query nodes of  the form `"nodevalue@capture_variable"`.
-In the matching process, the query and target node values are extracted
-using `query_tree_nodevalue` and `target_tree_nodevalue` respectively and compared.
-If they match, the `target_tree` node value is captured by applying `capture_function` to the node
-and a `MultiDict("capture_variable"=>captured_target_node_value))`. The `match_type` argument, for
-`:strict` values will require trees to have the exact number of sub-trees and/or leaves. If the
-value is set to `:nonstrict`, additional leaves and sub-trees of the target tree will be ignored
-when matching. Tree comparisons are also hashed and the result as well as captured symbols are stored
+One example is using query nodes of  the form `"nodevalue@capture_variable"`. In the matching
+process, the query and target node values are extracted using `query_tree_nodevalue` and
+`target_tree_nodevalue` respectively and compared. If they match, the `target_tree` node value
+is captured by applying `capture_function` to the node and stored as
+`MultiDict("capture_variable"=>captured_target_node_value))`.
+
+The `match_type` argument, for
+ • `:strict` values will require trees to have the same order and number of leafs/sub-trees
+ as the query tree.
+ • `:nonstrict` matching allows for additional leaves and sub-trees of the target tree; when
+ matching, all permutations possible of query tree length will be used to match the query.
+ • `:speculative` matching will stops after the first match for each sub-tree/leaf.
+
+Tree comparisons are also hashed and the result as well as captured symbols are stored
 in `match_cache` for quick retrieval.
+
+Specification of the node equality function can be done  through the `node_equality_function`
+keyword argument; default is `Base.isequal`.
 """
 function match_tree(
         target_tree,
@@ -202,8 +252,10 @@ function match_tree(
         target_tree_nodevalue = AbstractTrees.nodevalue,
         query_tree_nodevalue = AbstractTrees.nodevalue,
         capture_function = AbstractTrees.nodevalue,
-        node_comparison_yields_true = (args...) -> false
+        node_comparison_yields_true = (args...) -> false,
+        node_equality_function = Base.isequal
     )
+
     # Initializations
     c1 = children(target_tree)
     c2 = children(query_tree)
@@ -211,13 +263,17 @@ function match_tree(
     n2 = query_tree_nodevalue(query_tree)
     is_capture_node_q, capture_key = is_capture_node(query_tree)
     is_capture_node_t, _ = is_capture_node(target_tree)
+
     # Checks whether node values match or, we have a capture node with a capture condition
-    found::Bool = (n1 == n2) || node_comparison_yields_true(target_tree, query_tree)
+    found::Bool = node_equality_function(n1, n2) ||
+        node_comparison_yields_true(target_tree, query_tree)
+
     # Check hashes, return if found
     _hash = hash((target_tree, query_tree))
     if _hash in keys(match_cache)
         return match_cache[_hash]..., target_tree
     end
+
     # Start recursion
     if length(c1) == length(c2) == 0
         if is_capture_node_q
@@ -253,7 +309,8 @@ function match_tree(
                         target_tree_nodevalue,
                         query_tree_nodevalue,
                         capture_function,
-                        node_comparison_yields_true
+                        node_comparison_yields_true,
+                        node_equality_function
                     )
                     for (t, q) in zip(c1, c2)
             ]
@@ -261,12 +318,12 @@ function match_tree(
                 merge!(captured_symbols, subtree_captures)
                 found &= subtree_found
             end
-        else # match_type == :nonstrict
-            # Combinations of sub-trees of the target tree are matched against
+        elseif match_type == :nonstrict
+            # permutations of sub-trees of the target tree are matched against
             # the query tree; if any of them matches, the function returns
             subtrees_found = Bool[]
             _match_cache = Dict()
-            for c1c in combinations(c1, length(c2))
+            for c1_permutation in unique(permutations(c1, length(c2)))
                 _captured_symbols = MultiDict()
                 subtree_results = [
                     match_tree(
@@ -278,23 +335,70 @@ function match_tree(
                             target_tree_nodevalue,
                             query_tree_nodevalue,
                             capture_function,
-                            node_comparison_yields_true
+                            node_comparison_yields_true,
+                            node_equality_function
                         )
-                        for (t, q) in zip(c1c, c2)
+                        for (t, q) in zip(c1_permutation, c2)
                 ]
-                # All sub-trees of a specific combination must match
+                # All sub-trees of a specific permutation must match
                 _found = all(first, subtree_results)
                 if _found
                     for (_, subtree_captures, _) in subtree_results
                         merge!(captured_symbols, subtree_captures)  # add matched symbols
                     end
                 end
-                push!(subtrees_found, _found)  # store whether sub-tree combination was found
+                push!(subtrees_found, _found)  # store whether sub-tree permutation was found
             end
             # Resolve matching:
-            # - any of the matched sub-trees (from combinations will do)
+            # - any of the matched sub-trees (from permutations will do)
             # - logical AND is used to transmit finding recursively upwards
             found &= any(subtrees_found)
+        elseif match_type == :speculative
+            # Speculative matching: returns first match found.
+            # The search compares query nodes permutations against the target tree;
+            # the target tree is searched linearly and the search stops
+            # after the first match.
+            _match_cache = Dict()
+            subtrees_found = Bool[]
+            lenc2 = length(c2)
+            # seach over all query nodes permutations
+            for c2_permutation in unique(permutations(c2))
+                _captured_symbols = MultiDict()  # corresponds to `captured_symbols` in recursion
+                _t_captures = MultiDict()        # accumulates captures if subtrees are found
+                qidx = 1
+                # search linearly over target tree nodes
+                for t in c1
+                    if qidx > lenc2
+                        break  # break if all query trees found
+                    end
+                    _found, subtree_captures, _ = match_tree(
+                        t, c2_permutation[qidx];
+                        match_cache = _match_cache,
+                        captured_symbols = _captured_symbols,
+                        match_type = :speculative,
+                        is_capture_node,
+                        target_tree_nodevalue,
+                        query_tree_nodevalue,
+                        capture_function,
+                        node_comparison_yields_true,
+                        node_equality_function
+                    )
+                    if _found
+                        qidx += 1
+                        merge!(_t_captures, subtree_captures)
+                    end
+                end
+                if qidx > lenc2
+                    merge!(captured_symbols, _t_captures)
+                    push!(subtrees_found, true)
+                    break
+                else
+                    push!(subtrees_found, false)
+                end
+            end
+            found &= any(subtrees_found)
+        else
+            @error "Unknown match type. Use :strict, :nonstrict and :speculative"
         end
         push!(match_cache, _hash => (found, captured_symbols))
         return found, captured_symbols, target_tree
@@ -314,12 +418,13 @@ function query(
         target_tree,
         query_tree;
         match_type = :strict,
+        match_cache = Dict(),
         is_capture_node = is_capture_node,
         target_tree_nodevalue = AbstractTrees.nodevalue,
         query_tree_nodevalue = AbstractTrees.nodevalue,
         capture_function = AbstractTrees.nodevalue,
         node_comparison_yields_true = (args...) -> false,
-        match_cache = Dict()
+        node_equality_function = Base.isequal
     )
     # Checks
     check_tq_tree(query_tree)
@@ -329,12 +434,13 @@ function query(
             tn,
             query_tree;
             match_type,
+            match_cache,
             is_capture_node,
             target_tree_nodevalue,
             query_tree_nodevalue,
             capture_function,
             node_comparison_yields_true,
-            match_cache
+            node_equality_function,
         )
         push!(matches, m)
     end
@@ -349,19 +455,15 @@ exist `nothing` is returned.
 get_capture(qr::AbstractVector, key) = begin
     qrf = filter(first, qr)  # get only matched queries
     result = []
-    for qri in qr
-        try
-            r = get_capture(qri, key)
-            !isnothing(r) && push!(result, r)
-        catch e
-            rethrow()
-        end
+    for qri in qrf
+        r = get_capture(qri, key)
+        !isnothing(r) && push!(result, r)
     end
     ifelse(!isempty(result), result, nothing)
 end
 
 get_capture(qr::Tuple, key) = begin
-    _, captures = qr
+    _, captures, _ = qr
     values = get(captures, key, nothing)
     values == nothing && return nothing
     if values isa Vector && length(values) > 1

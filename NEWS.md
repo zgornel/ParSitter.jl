@@ -1,0 +1,13 @@
+v0.2.0
+------
+ - Query language support
+ - `:speculative` i.e. first match query support
+ - Package tests with Aqua.jl
+ - Add public API
+ - Bugfixes and performance improvements
+
+v0.1.0
+------
+ - Initial release
+ - Support for parsing C, C#, R, Julia
+ - Query through tree matching

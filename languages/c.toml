@@ -1,0 +1,6 @@
+parsitter-name = "c"
+enabled = true
+tree-sitter-scope = "source.c"
+file-extensions = [".h", ".c"]
+type-replacements = { COMMENT = "//comment", IDENTIFIER = "var", NUMBER = "0", STRING = "\"\"", VARIABLE = "x", TYPE = "int", BOOLEAN = "1", FUNCTION = "void f() {}"}
+string-delim = "\""

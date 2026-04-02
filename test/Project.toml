@@ -1,0 +1,8 @@
+[deps]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+Logging = "56ddb016-857b-54e1-b83d-db4d58db5568"
+Aqua = "4c88cf16-eb10-579e-8560-4a9242c79595"
+DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
+
+[compat]
+Aqua = "0.8"

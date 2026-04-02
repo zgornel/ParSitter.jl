@@ -6,10 +6,8 @@ using ParSitter
 _PYTHON = (ParSitter.File(abspath("./test/code/python/test_project/main.py")), "python")
 _C = (ParSitter.File(abspath("./test/code/c/test_pass_value_lib/test_pass_value.c")), "c")
 
-_parsed_py = ParSitter.parse(_PYTHON...)
+_parsed = ParSitter.parse(_PYTHON...)
 #_parsed_c = ParSitter.parse(_C...)
-
-_parsed = first(values(_parsed_py))
 
 target = ParSitter.build_xml_tree(_parsed)
 #print_tree(target.root, maxdepth=20)
