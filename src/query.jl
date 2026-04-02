@@ -455,19 +455,15 @@ exist `nothing` is returned.
 get_capture(qr::AbstractVector, key) = begin
     qrf = filter(first, qr)  # get only matched queries
     result = []
-    for qri in qr
-        try
-            r = get_capture(qri, key)
-            !isnothing(r) && push!(result, r)
-        catch e
-            rethrow()
-        end
+    for qri in qrf
+        r = get_capture(qri, key)
+        !isnothing(r) && push!(result, r)
     end
     ifelse(!isempty(result), result, nothing)
 end
 
 get_capture(qr::Tuple, key) = begin
-    _, captures = qr
+    _, captures, _ = qr
     values = get(captures, key, nothing)
     values == nothing && return nothing
     if values isa Vector && length(values) > 1

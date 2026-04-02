@@ -201,7 +201,7 @@ end
         code_snippet::String,
         language::String;
         custom_replacements::Dict = Dict()
-    ) -> ParSitter.TreeQueryExpr
+    ) -> (ParSitter.TreeQueryExpr, Dict, String)
 
 Parse a code snippet with capture placeholders and convert it to a TreeQueryExpr.
 
@@ -211,7 +211,9 @@ Parse a code snippet with capture placeholders and convert it to a TreeQueryExpr
 - `custom_replacements::Dict`: Optional replacements for `{{custom_code}}` placeholders
 
 # Returns
-A `TreeQueryExpr` ready to be used with `ParSitter.match_tree`
+ - a `TreeQueryExpr` ready to be used with `ParSitter.match_tree`
+ - symbol map whith introduced symbols and ParSitter types
+ - the generated code
 
 # Example
 ```julia
