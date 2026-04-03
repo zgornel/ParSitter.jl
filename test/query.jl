@@ -14,6 +14,32 @@ _capture_on_empty_query_value(tt, qt) =
 ) ||
     _query_tree_nodevalue(qt) == "*"
 
+@testset "prune! function" begin
+    @testset "case 1" begin
+        tt = build_tq_tree((1, 2, 3, (1, 2), 1, (4, (5, 1))))
+        ParSitter.prune!(tt, 1)
+        @test tt == build_tq_tree((1, 2, 3, (4, 5)))
+    end
+
+    @testset "case 1-string" begin
+        tt = build_tq_tree((1, 2, 3, (1, 2), 1, (4, (5, 1))))
+        ParSitter.prune!(tt, "1", nodevalue_function = n -> string(n.head))
+        @test tt == build_tq_tree((1, 2, 3, (4, 5)))
+    end
+
+    @testset "case 2" begin
+        tt = build_tq_tree((1, 2, 3, (1, 2), 1, (4, (5, 1))))
+        ParSitter.prune!(tt, 2)
+        @test tt == build_tq_tree((1, 3, 1, 1, (4, (5, 1))))
+    end
+
+    @testset "case 2-string" begin
+        tt = build_tq_tree((1, 2, 3, (1, 2), 1, (4, (5, 1))))
+        ParSitter.prune!(tt, "2", nodevalue_function = n -> string(n.head))
+        @test tt == build_tq_tree((1, 3, 1, 1, (4, (5, 1))))
+    end
+
+end
 
 @testset "match_type==:strict quering" begin
     @testset "case 1" begin

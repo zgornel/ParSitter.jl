@@ -23,7 +23,6 @@ export parse_code_snippet_to_query
 # Type for {{some_code}} i.e. replacements without `::`
 const GENERIC_TYPE = "GENERIC_CODE"
 
-
 """
 Retrieves the comment symbol from DEFAULT_TYPE_REPLACEMENTS.
 All comments are assument to be of the form: \"<COMMENT_SYMBOL>comment\".
