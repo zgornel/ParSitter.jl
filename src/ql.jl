@@ -62,17 +62,24 @@ function _extract_placeholders(code::String)::Vector{Tuple{String, String, Strin
 end
 
 const DEFAULT_STR_CHAR = "\""
+const RAND_STR_LEN = 10
+const FAILSAFE_STR = "string_failsafe"
 
 function _inquote_string_value(input_string, language)
     str_char = get(STRING_DELIMS, language, DEFAULT_STR_CHAR)
-    _, _c, _ = split(input_string, str_char)
-    return str_char * _c * "_" * randstring(10) * str_char
+    _c = FAILSAFE_STR
+    try
+        _, _c, _ = split(input_string, str_char)
+    catch e
+        @warn "Could not split string using \\$str_char as string marker.\n$e"
+    end
+    return str_char * _c * "_" * randstring(RAND_STR_LEN) * str_char
 end
 
 function _dequote_string_value(input_string, language)
     str_char = get(STRING_DELIMS, language, DEFAULT_STR_CHAR)
     _, _c, _ = split(input_string, str_char)
-    return _c[1:(end - 11)]
+    return _c[1:(end - (RAND_STR_LEN + 1))]
 end
 
 
@@ -89,20 +96,20 @@ function _generate_name(capture_name, capture_type, language)
         elseif capture_type == "STRING"
             return _inquote_string_value(lang_replacements[capture_type], language)
         else
-            return lang_replacements[capture_type] * "_" * randstring(10)
+            return lang_replacements[capture_type] * "_" * randstring(RAND_STR_LEN)
         end
     else
         if capture_type == "COMMENT"
             # Note: assumes NO space after comment symbol in  DEFAULT_TYPE_REPLACEMENTS
             _comment_symbol = _get_comment_symbol(language; capture_type)
-            return _comment_symbol * capture_name * "_" * randstring(10)
+            return _comment_symbol * capture_name * "_" * randstring(RAND_STR_LEN)
         elseif capture_type == "STRING"
             str_char = get(STRING_DELIMS, language, DEFAULT_STR_CHAR)
             return _inquote_string_value(str_char * capture_name * str_char, language)
         else
             # Symbols that are captured have the original
             # capture name in the randomized value
-            return capture_name * "_" * randstring(10)
+            return capture_name * "_" * randstring(RAND_STR_LEN)
         end
     end
 end
