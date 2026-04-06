@@ -73,3 +73,34 @@ function populate!(
 
     return
 end
+
+# Tree pruning methods
+"""
+    prune!(node, value; nodevalue_function = AbstractTrees.nodevalue)
+
+Recursively prunes an AbstractTrees.jl-compatible tree (in-place) rooted at `node`.
+Pruning rule (applied at every level): after recursively pruning all child subtrees,
+remove any direct child whose subtree contains `value` in any of its nodes
+(including the child node itself). `value` is the input parameter (e.g. call
+as `prune!(root, nodevalue(root))` to prune duplicates of the root value).
+Assumes `AbstractTrees.children(node)` returns a mutable `Vector`, standard for most
+custom `Node` types. A custom function `nodevalue_function` can be applied to
+each node to extract its value for the comparision with `value`.
+"""
+function prune!(node, value; nodevalue_function = AbstractTrees.nodevalue)
+    # 1. Recursively prune deeper levels first (bottom-up)
+    for child in AbstractTrees.children(node)
+        prune!(child, value; nodevalue_function)
+    end
+
+    # 2. Remove any child whose (now-pruned) subtree still contains the value
+    return filter!(AbstractTrees.children(node)) do child
+        !subtree_contains(child, value; nodevalue_function)
+    end
+end
+
+# Small recursive helper used by prune!
+function subtree_contains(node, value; nodevalue_function = AbstractTrees.nodevalue)
+    return nodevalue_function(node) == value ||
+        any(subtree_contains(c, value; nodevalue_function) for c in AbstractTrees.children(node))
+end
