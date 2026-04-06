@@ -88,7 +88,7 @@ Generates a valid symbol name depending on original capture_name, the type and l
 function _generate_name(capture_name, capture_type, language)
     @assert haskey(DEFAULT_TYPE_REPLACEMENTS, language)
     lang_replacements = DEFAULT_TYPE_REPLACEMENTS[language]
-    @assert haskey(lang_replacements, capture_type)
+    @assert haskey(lang_replacements, capture_type) "$capture_type not found in replaceable entities for language $language"
     return if isempty(capture_name)
         if capture_type ∈ ["NUMBER", "BOOLEAN"]
             return lang_replacements[capture_type]  # numbers/booleans are not randomized
@@ -156,7 +156,22 @@ function _parse_code_to_xml_tree(code::String, language::String)
     end
 end
 
+# ParSitter Types for which query children are skipped
+# i.e. whole sub-tree is captured
+const SKIP_CHILDREN_TYPES = Dict("python" =>["BLOCK", "EXPRESSION"],
+                                 "r" =>["R_FORMULA"]
+                                 )
+# Language-related type replacement from: ParSitter capture type to tree-sitter type
+const OVERRIDE_TYPES = Dict("python" => Dict("BLOCK" => "block",
+                                             "EXPRESSION" => "expression_statement"),
+                            "r" => Dict()
+                            )
 
+# tree-sitter node types whose content will be kept in ParSitter generated
+# queries and not replaced with the wildcard '*'
+const KEEP_CONTENT_TS_TYPES = Dict("python" => ["identifier"],
+                                   "r" => ["identifier"]
+                                 )
 """
 Function that transforms an XML tree into a `TreeQueryExpr` based on the
 information from symbol mappings. Returns a `TreeQueryExpr{TreeQueryNode}`.
@@ -168,9 +183,17 @@ function _xml_node_to_tqexpr(node, symbol_map, language)
     skip_children = false
     if node_content in keys(symbol_map)
         capture_type, is_capturable = symbol_map[node_content]
-        # We are dealing with an expression generated
-        capture_type == "R_FORMULA" && (skip_children = true)
+        # Handling of nodes whose children will be skipped
+        # i.e. whole tree will be captured
+        if capture_type in get(SKIP_CHILDREN_TYPES, language, [])
+            skip_children = true
+        end
+        # Handling of nodes whose tree-sitter type will be preserved.
+        # This is the case when the type of value inserted in the generated
+        # code does not match the expectd tree-sitter query node type
+        node_type = get(get(OVERRIDE_TYPES, language, Dict()), capture_type, node_type)
         if is_capturable
+            # We are dealing with an expression generated
             if capture_type == "COMMENT"  # remove comment symbol from capturable name
                 _comment_symbol = _get_comment_symbol(language; capture_type)
                 node_value = replace(node_value, _comment_symbol => "")
@@ -183,11 +206,13 @@ function _xml_node_to_tqexpr(node, symbol_map, language)
             node_value = "*"
         end
     else
-        # This is a node that was not inserted by us or,
-        # a node in a sub-tree of a generated expression
-        if node_type == "identifier"  # this is a tree-sitter node type
+        # Handling of nodes that are not capturable and
+        # whose content needs to remain in the query
+        # i.e. identifiers, operators
+        if node_type ∈ get(KEEP_CONTENT_TS_TYPES, language, [])
             node_value = node_content
         else
+            # Node value is not important however type is preserved
             node_value = "*"
         end
     end
