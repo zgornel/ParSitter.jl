@@ -20,7 +20,7 @@ or through the `pkg` mode
 ] add ParSitter
 ```
 
-Check out the [documentation](https://zgornel.github.io/ParSitter.jl/dev) for information on using the library.
+Check out the [documentation](https://zgornel.github.io/ParSitter.jl/dev) for information on using the library. Usage examples are provided in the [scripts/](https://github.com/zgornel/ParSitter.jl/tree/master/scripts) and [test/languages/](https://github.com/zgornel/ParSitter.jl/tree/master/test/languages) directories.
 
 ## Differences from TreeSitter.jl
 This package differs from [TreeSitter.jl](https://github.com/MichaelHatherly/TreeSitter.jl) in that it calls the tree-sitter parsing CLI externally and reads directly the XML result. TreeSitter.jl provides a much tighter integration with the tree-sitter parsing and querying APIs. ParSitter provides a looser coupling with tree-sitter and more flexible querying mechanisms.
