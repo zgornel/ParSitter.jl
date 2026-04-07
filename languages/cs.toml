@@ -4,3 +4,6 @@ tree-sitter-scope = "source.cs"
 file-extensions = [".cs"]
 type-replacements = { COMMENT = "//comment", IDENTIFIER = "var", NUMBER = "0", STRING = "\"\"", VARIABLE = "x", BOOLEAN = "true", FUNCTION = "void F() { }"}
 string-delim = "\""
+skip-children-types = []
+override-types = {}
+keep-content-ts-types = ["identifier"]

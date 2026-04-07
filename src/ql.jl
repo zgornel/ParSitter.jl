@@ -13,7 +13,9 @@ module QueryLanguage
 
 import Base.Regex
 import ..ParSitter
-import ..ParSitter: TreeQueryNode, DEFAULT_TYPE_REPLACEMENTS, STRING_DELIMS
+import ..ParSitter: TreeQueryNode, DEFAULT_TYPE_REPLACEMENTS,
+                    STRING_DELIMS, SKIP_CHILDREN_TYPES,
+                    OVERRIDE_TYPES, KEEP_CONTENT_TS_TYPES
 using Random
 using EzXML
 using AbstractTrees
@@ -156,22 +158,7 @@ function _parse_code_to_xml_tree(code::String, language::String)
     end
 end
 
-# ParSitter Types for which query children are skipped
-# i.e. whole sub-tree is captured
-const SKIP_CHILDREN_TYPES = Dict("python" =>["BLOCK", "EXPRESSION"],
-                                 "r" =>["R_FORMULA"]
-                                 )
-# Language-related type replacement from: ParSitter capture type to tree-sitter type
-const OVERRIDE_TYPES = Dict("python" => Dict("BLOCK" => "block",
-                                             "EXPRESSION" => "expression_statement"),
-                            "r" => Dict()
-                            )
 
-# tree-sitter node types whose content will be kept in ParSitter generated
-# queries and not replaced with the wildcard '*'
-const KEEP_CONTENT_TS_TYPES = Dict("python" => ["identifier"],
-                                   "r" => ["identifier"]
-                                 )
 """
 Function that transforms an XML tree into a `TreeQueryExpr` based on the
 information from symbol mappings. Returns a `TreeQueryExpr{TreeQueryNode}`.

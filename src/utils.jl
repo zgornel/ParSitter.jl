@@ -20,6 +20,22 @@ String delimiters for different languages
 """
 const STRING_DELIMS = Dict{String, String}()
 
+"""
+ParSitter Types for which query children are skipped i.e. whole sub-tree is captured.
+"""
+const SKIP_CHILDREN_TYPES = Dict{String, Vector{String}}()
+
+"""
+Language-related type replacement from: ParSitter capture type to tree-sitter type.
+"""
+const OVERRIDE_TYPES = Dict{String, Dict{String, String}}()
+
+"""
+`tree-sitter` node types whose content will be kept in ParSitter generated
+queries and not replaced with the wildcard '*'.
+"""
+const KEEP_CONTENT_TS_TYPES = Dict{String, Vector{String}}()
+
 
 """
 Reads the contents of `language_directory` and populates the constants:
@@ -29,7 +45,10 @@ function populate!(
         language_map,
         all_file_extensions,
         default_type_replacements,
-        string_delims;
+        string_delims,
+        skip_children_types,
+        override_types,
+        keep_content_ts_types;
         language_directory = ""
     )
 
@@ -45,25 +64,35 @@ function populate!(
                 end
                 # Read file contents into variables
                 is_enabled = get(contents, "enabled", false)
-                parsitter_name = get(contents, "parsitter-name", nothing)
-                tree_sitter_scope = get(contents, "tree-sitter-scope", nothing)
-                file_extensions = get(contents, "file-extensions", nothing)
-                type_replacements = get(contents, "type-replacements", nothing)
-                string_delim = get(contents, "string-delim", nothing)
-                # Checks of the fields
-                @assert !isnothing(parsitter_name) "Missing \"parsitter-name\" field @$file"
-                @assert !isnothing(tree_sitter_scope) "Missing \"tree-sitter-scope\" field @$file"
-                @assert !isnothing(file_extensions) "Missing \"file-extensions\" field @$file"
-                @assert !isnothing(type_replacements) "Missing \"type-replacements\" field @$file"
-                @assert !isnothing(string_delim) "Missing \"string-delim\" field @$file"
-                @assert !isempty(file_extensions) "Empty\"file-extensions\" value @$file"
-                @assert !isempty(type_replacements) "Empty \"type-replacements\" value @$file"
+                _parsitter_name = get(contents, "parsitter-name", nothing)
+                _tree_sitter_scope = get(contents, "tree-sitter-scope", nothing)
+                _file_extensions = get(contents, "file-extensions", nothing)
+                _type_replacements = get(contents, "type-replacements", nothing)
+                _string_delims = get(contents, "string-delim", nothing)
+                _skip_children_types = get(contents, "skip-children-types", nothing)
+                _override_types = get(contents, "override-types", nothing)
+                _keep_content_ts_types = get(contents, "keep-content-ts-types", nothing)
+                # Checks of the fields presence
+                @assert !isnothing(_parsitter_name) "Missing \"parsitter-name\" field @$file"
+                @assert !isnothing(_tree_sitter_scope) "Missing \"tree-sitter-scope\" field @$file"
+                @assert !isnothing(_file_extensions) "Missing \"file-extensions\" field @$file"
+                @assert !isnothing(_type_replacements) "Missing \"type-replacements\" field @$file"
+                @assert !isnothing(_string_delims) "Missing \"string-delim\" field @$file"
+                @assert !isnothing(_skip_children_types) "Missing \"skip-children-types\" field @$file"
+                @assert !isnothing(_override_types) "Missing \"override-types\" field @$file"
+                @assert !isnothing(_keep_content_ts_types) "Missing \"keep-content-ts-types\" field @$file"
+                # Checks of the fields values
+                @assert !isempty(_file_extensions) "Empty\"file-extensions\" value @$file"
+                @assert !isempty(_type_replacements) "Empty \"type-replacements\" value @$file"
                 # Fill in the globals
                 if is_enabled
-                    push!(language_map, parsitter_name => tree_sitter_scope)
-                    push!(all_file_extensions, parsitter_name => file_extensions)
-                    push!(default_type_replacements, parsitter_name => type_replacements)
-                    push!(string_delims, parsitter_name => string_delim)
+                    push!(language_map, _parsitter_name => _tree_sitter_scope)
+                    push!(all_file_extensions, _parsitter_name => _file_extensions)
+                    push!(default_type_replacements, _parsitter_name => _type_replacements)
+                    push!(string_delims, _parsitter_name => _string_delims)
+                    push!(skip_children_types, _parsitter_name => _skip_children_types)
+                    push!(override_types, _parsitter_name => _override_types)
+                    push!(keep_content_ts_types, _parsitter_name => _keep_content_ts_types)
                 end
             catch e
                 @warn "Could not parse language file @$full_file\n$e"

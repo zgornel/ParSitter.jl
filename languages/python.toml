@@ -4,3 +4,6 @@ tree-sitter-scope = "source.python"
 file-extensions = [".py"]
 type-replacements = { EXPRESSION = "# some expression", BLOCK = "# code block", COMMENT = "#comment", IDENTIFIER = "var", NUMBER = "0", STRING = "\"\"", VARIABLE = "x", BOOLEAN = "True", FUNCTION = "def f(): pass"}
 string-delim = "\""
+skip-children-types = ["BLOCK", "EXPRESSION"]
+override-types = {"BLOCK" = "block", "EXPRESION" = "expression_statement"}
+keep-content-ts-types = ["identifier"]

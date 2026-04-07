@@ -17,7 +17,10 @@ function __init__()
         LANGUAGE_MAP,
         FILE_EXTENSIONS,
         DEFAULT_TYPE_REPLACEMENTS,
-        STRING_DELIMS;
+        STRING_DELIMS,
+        SKIP_CHILDREN_TYPES,
+        OVERRIDE_TYPES,
+        KEEP_CONTENT_TS_TYPES;
         language_directory
     )
 end
