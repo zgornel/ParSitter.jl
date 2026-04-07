@@ -45,7 +45,7 @@ print_tree(generated_query, maxdepth=20)
     node_comparison_yields_true = _capture_on_empty_query_value,
     node_equality_function = _node_equality_function
 )
-filter!(first, query_results) # keep only matches^C
+filter!(first, query_results) # keep only matches
 if isempty(query_results)
     println("No query results")
 else
