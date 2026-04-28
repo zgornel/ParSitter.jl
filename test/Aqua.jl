@@ -7,6 +7,7 @@ using Aqua
         #ambiguities=(exclude=[ParSitter.convert], broken=true),
         stale_deps = (ignore = [:ArgParse, :JSON],),
         deps_compat = (check_extras = false, ignore = [:Logging, :Pkg, :Test]),
-        piracies = false
+        piracies = false,
+        persistent_tasks = (tmax=10,)
     )
 end

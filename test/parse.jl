@@ -4,7 +4,6 @@ test_dir = abspath(dirname(@__FILE__))
 
 @testset "parser" begin
     for (language, ts_language) in LANGUAGE_MAP
-        @test ParSitter._make_parse_code_cmd("", language) isa Base.AbstractCmd
         @test ParSitter._make_parse_file_cmd("", language) isa Base.AbstractCmd
     end
 

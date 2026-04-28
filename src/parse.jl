@@ -54,38 +54,20 @@ end
 Base.isfile(::Nothing) = false
 
 """
-Checks that `tree-sitter` is installed and that the operating system is `Linux`.
+    check_tree_sitter(; tree_sitter_path::Union{String,Nothing} = nothing)
+
+Verify that the tree-sitter CLI is available. Works on Linux, macOS, and Windows.
+Throws an informative error if not found.
 """
-function check_tree_sitter(;
-        system = :Linux,
-        tree_sitter_path = nothing
-    )
-    return if system == :Linux
-        @assert Sys.islinux() "This is not a Linux system."
-        @assert !isempty(
-            try
-                read(`tree-sitter --version`, String)
-            catch
-                ""
-            end
-        ) ||
-            isfile("/usr/bin/tree-sitter") ||
-            isfile("/bin/tree-sitter") ||
-            isfile(tree_sitter_path) "tree-sitter not found on system"
+function check_tree_sitter(; tree_sitter_path = nothing)
+    cmd = isnothing(tree_sitter_path) ? `tree-sitter` : Cmd([tree_sitter_path])
+    version_output = try
+        read(`$cmd --version`, String)
+    catch
+        ""
     end
-end
-
-function _normalize_fs_path(path::String)::String
-    result = replace(path, "\\" => "/")
-    result = String(strip(result))
-    return result
-end
-
-
-# Returns a tree-sitter command
-function _make_parse_code_cmd(code::String, language::String)
-    _language = LANGUAGE_MAP[language]
-    return pipeline(`tree-sitter parse -q -x --scope $_language /dev/stdin`, stdin = IOBuffer(code), stderr = devnull)
+    @assert !isempty(strip(version_output)) "tree-sitter CLI not found in PATH (or at provided path). See README.md for installation instructions."
+    return nothing
 end
 
 # Returns a tree-sitter command
@@ -115,14 +97,19 @@ function _parse(code::String, language::String; escape_chars = false, print_code
     check_tree_sitter()
     escape_chars && (code = _enable_escape_chars(code))
     print_code && println("---\n$code\n---\n")
-    ts_cmd = _make_parse_code_cmd(code, language)
-    out = try
-        out = read(ts_cmd, String)
-    catch e
-        @warn "Could not parse code snippet.\n$e"
-        ""
+
+    mktemp() do tmp_path, io
+        write(io, code)
+        flush(io)
+        ts_cmd = _make_parse_file_cmd(tmp_path, language)  # reuse the existing file parser
+        out = try
+            read(ts_cmd, String)
+        catch e
+            @warn "Could not parse code snippet.\n$e"
+            ""
+        end
+        return replace(out, "\n" => "")
     end
-    return replace(out, "\n" => "")
 end
 
 """
@@ -146,7 +133,7 @@ it to tree-sitter for parsing and returns a `ParseResult` with  parse results.
 function Base.parse(file::File, language::String)
     check_language(language, LANGUAGE_MAP)
     check_tree_sitter()
-    _file = abspath(_normalize_fs_path(file.name))
+    _file = abspath(file.name)
     @debug "Parsing file @ $_file ..."
     ts_cmd = _make_parse_file_cmd(_file, language)
     out = try
