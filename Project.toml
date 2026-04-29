@@ -1,6 +1,6 @@
 name = "ParSitter"
 uuid = "bdeffda0-9f75-4d6c-9dad-1bfd8db84b8f"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Corneliu Cofaru <cornel@oxoaresearch.com>"]
 
 [workspace]

@@ -1,3 +1,7 @@
+v0.2.1
+------
+ - portability improvements (macOS, windows)
+
 v0.2.0
 ------
  - high-level query language
