@@ -8,6 +8,6 @@ using Aqua
         stale_deps = (ignore = [:ArgParse, :JSON],),
         deps_compat = (check_extras = false, ignore = [:Logging, :Pkg, :Test]),
         piracies = false,
-        persistent_tasks = (tmax=10,)
+        persistent_tasks = (tmax = 10,)
     )
 end

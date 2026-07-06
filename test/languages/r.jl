@@ -428,4 +428,3 @@
         @test length(query_results[1][2]["a_string"]) == 1  # either "AA" or "BB" captured
     end
 end
-

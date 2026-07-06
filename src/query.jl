@@ -27,12 +27,36 @@ end
 
 # AbstractTrees interface for tree-sitter generated XML ASTs
 AbstractTrees.children(t::EzXML.Node) = collect(EzXML.eachelement(t));
-AbstractTrees.nodevalue(t::EzXML.Node) = (
-    t.name,
-    "0x" * string(hash(t.ptr); base = 16),
-    (row = ("$(t["srow"]):$(t["erow"])"), col = "($(t["scol"]):$(t["ecol"]))"),
-    _strip_spaces(t.content) |> x -> ifelse(length(x) >= 20, x[1:min(length(x), 20)] * "...", x),
-)
+AbstractTrees.nodevalue(t::EzXML.Node) = begin
+    _name = if hasproperty(t, :name)
+        t.name
+    else
+        @error "Could not extract property :name from EzXML node"
+    end
+    _hash = if hasproperty(t, :ptr)
+        "0x" * string(hash(t.ptr); base = 16)
+    else
+        @error "Could not extract property :ptr from EzXML node"
+    end
+    _row = if haskey(t, "srow") && haskey(t, "erow")
+        "$(t["srow"]):$(t["erow"])"
+    else
+        @debug "Could not extract keys :srow and/or :erow from EzXML node"
+        "-1:-1"
+    end
+    _col = if haskey(t, "scol") && haskey(t, "ecol")
+        "$(t["scol"]):$(t["ecol"])"
+    else
+        "-1:-1"
+        @debug "Could not extract properties :scol and/or :ecol from EzXML node"
+    end
+    _content = if hasproperty(t, :content)
+        _strip_spaces(t.content) |> x -> ifelse(length(x) >= 20, x[1:min(length(x), 20)] * "...", x)
+    else
+        ""
+    end
+    return (_name, _hash, (row = _row, col = _col), _content)
+end
 AbstractTrees.parent(t::EzXML.Node) = t.parentnode
 AbstractTrees.nextsibling(t::EzXML.Node) = EzXML.nextelement(t)
 AbstractTrees.prevsibling(t::EzXML.Node) = EzXML.prevelement(t)

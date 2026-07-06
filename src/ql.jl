@@ -14,8 +14,8 @@ module QueryLanguage
 import Base.Regex
 import ..ParSitter
 import ..ParSitter: TreeQueryNode, DEFAULT_TYPE_REPLACEMENTS,
-                    STRING_DELIMS, SKIP_CHILDREN_TYPES,
-                    OVERRIDE_TYPES, KEEP_CONTENT_TS_TYPES
+    STRING_DELIMS, SKIP_CHILDREN_TYPES,
+    OVERRIDE_TYPES, KEEP_CONTENT_TS_TYPES
 using Random
 using EzXML
 using AbstractTrees

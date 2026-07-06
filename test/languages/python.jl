@@ -27,10 +27,12 @@
     end
 
     function _capture_on_empty_query_value(tn, qn)
-        return ((ParSitter.is_capture_node(qn; capture_sym = "@").is_match &&
-                                                   isempty(first(_query_nodevalue(qn)))
-                                            ) || first(_query_nodevalue(qn)) == "*"
-                                         ) && _target_nodevalue(tn)[2] == _query_nodevalue(qn)[2]
+        return (
+            (
+                ParSitter.is_capture_node(qn; capture_sym = "@").is_match &&
+                    isempty(first(_query_nodevalue(qn)))
+            ) || first(_query_nodevalue(qn)) == "*"
+        ) && _target_nodevalue(tn)[2] == _query_nodevalue(qn)[2]
     end
 
     function _node_equality_function(n1, n2)
@@ -46,7 +48,9 @@
                 b = b+c
                 c = bar(a,b, method=true)
                 return c
-            """))
+            """
+        )
+    )
     language = "python"
 
     # Strict querying
