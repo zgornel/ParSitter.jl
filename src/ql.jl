@@ -15,7 +15,7 @@ import Base.Regex
 import ..ParSitter
 import ..ParSitter: TreeQueryNode, DEFAULT_TYPE_REPLACEMENTS,
     STRING_DELIMS, SKIP_CHILDREN_TYPES,
-    OVERRIDE_TYPES, KEEP_CONTENT_TS_TYPES
+    OVERRIDE_TYPES, KEEP_CONTENT_TS_TYPES, SKIP_CONTENT_TS_TYPES
 using Random
 using EzXML
 using AbstractTrees
@@ -168,7 +168,7 @@ function _xml_node_to_tqexpr(node, symbol_map, language)
     node_content = strip(replace(node.content, r"\s" => ""))
     node_value = node_content
     skip_children = false
-    if node_content in keys(symbol_map)
+    if node_content in keys(symbol_map) && node_type ∉ get(SKIP_CONTENT_TS_TYPES, language, [])
         capture_type, is_capturable = symbol_map[node_content]
         # Handling of nodes whose children will be skipped
         # i.e. whole tree will be captured

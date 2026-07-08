@@ -1,3 +1,7 @@
+v0.2.2
+------
+ - improved Python support
+
 v0.2.1
 ------
  - portability improvements (macOS, windows)

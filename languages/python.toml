@@ -7,3 +7,4 @@ string-delim = "\""
 skip-children-types = ["BLOCK", "EXPRESSION"]
 override-types = {"BLOCK" = "block", "EXPRESION" = "expression_statement"}
 keep-content-ts-types = ["identifier"]
+skip-content-ts-types = ["sources", "source", "module"]

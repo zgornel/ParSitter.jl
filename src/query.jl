@@ -47,8 +47,8 @@ AbstractTrees.nodevalue(t::EzXML.Node) = begin
     _col = if haskey(t, "scol") && haskey(t, "ecol")
         "$(t["scol"]):$(t["ecol"])"
     else
-        "-1:-1"
         @debug "Could not extract properties :scol and/or :ecol from EzXML node"
+        "-1:-1"
     end
     _content = if hasproperty(t, :content)
         _strip_spaces(t.content) |> x -> ifelse(length(x) >= 20, x[1:min(length(x), 20)] * "...", x)
