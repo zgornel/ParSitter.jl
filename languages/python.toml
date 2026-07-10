@@ -2,9 +2,9 @@ parsitter-name = "python"
 enabled = true
 tree-sitter-scope = "source.python"
 file-extensions = [".py"]
-type-replacements = { EXPRESSION = "# some expression", BLOCK = "# code block", COMMENT = "#comment", IDENTIFIER = "var", NUMBER = "0", STRING = "\"\"", VARIABLE = "x", BOOLEAN = "True", FUNCTION = "def f(): pass"}
+type-replacements = { EXPRESSION = "# some expression", BLOCK = "# code block", COMMENT = "#comment", IDENTIFIER = "var", NUMBER = "0", STRING = "\"\"", VARIABLE = "x", BOOLEAN = "True", FUNCTION = "def f(): pass", ARGUMENT_LIST="[]"}
 string-delim = "\""
-skip-children-types = ["BLOCK", "EXPRESSION"]
-override-types = {"BLOCK" = "block", "EXPRESION" = "expression_statement"}
+skip-children-types = ["BLOCK", "EXPRESSION", "ARGUMENT_LIST"]
+override-types = {"BLOCK" = "block", "EXPRESION" = "expression_statement", "ARGUMENT_LIST" = "argument_list"}
 keep-content-ts-types = ["identifier"]
 skip-content-ts-types = ["sources", "source", "module"]

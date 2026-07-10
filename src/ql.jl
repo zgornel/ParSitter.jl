@@ -92,8 +92,11 @@ function _generate_name(capture_name, capture_type, language)
     lang_replacements = DEFAULT_TYPE_REPLACEMENTS[language]
     @assert haskey(lang_replacements, capture_type) "$capture_type not found in replaceable entities for language $language"
     return if isempty(capture_name)
-        if capture_type ∈ ["NUMBER", "BOOLEAN"]
-            return lang_replacements[capture_type]  # numbers/booleans are not randomized
+        if capture_type ∈ ["NUMBER", "BOOLEAN", "ARGUMENT_LIST"]
+            # When the code is not captured, code replacement values for specific types:
+            # numbers/booleans/argument lists, are inserted in generated code 'as is' i.e
+            # the content does not udergo specific treatment
+            return lang_replacements[capture_type]
         elseif capture_type == "STRING"
             return _inquote_string_value(lang_replacements[capture_type], language)
         else
@@ -159,13 +162,24 @@ function _parse_code_to_xml_tree(code::String, language::String)
 end
 
 
+__get_node_content(node::EzXML.Node, language) = begin
+    node_type = node.name
+    # Exceptions would go here
+    node_content = if language == "python" && node_type == "argument_list"
+        strip(replace(node.content, r"[(,),\s]*" => ""))
+    else
+        strip(replace(node.content, r"\s" => ""))
+    end
+    return node_content
+end
+
 """
 Function that transforms an XML tree into a `TreeQueryExpr` based on the
 information from symbol mappings. Returns a `TreeQueryExpr{TreeQueryNode}`.
 """
 function _xml_node_to_tqexpr(node, symbol_map, language)
     node_type = node.name
-    node_content = strip(replace(node.content, r"\s" => ""))
+    node_content = __get_node_content(node, language)
     node_value = node_content
     skip_children = false
     if node_content in keys(symbol_map) && node_type ∉ get(SKIP_CONTENT_TS_TYPES, language, [])
