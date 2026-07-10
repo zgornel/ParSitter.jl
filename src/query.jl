@@ -94,6 +94,7 @@ used for the head as well as children. Usually, nodes are `::String`s.
 end
 
 AbstractTrees.nodevalue(se::TreeQueryExpr) = _query_node_value(se.head)
+AbstractTrees.nodevalue(se::TreeQueryExpr{TreeQueryNode}) = _query_node_value(se.head), _query_node_type(se.head)
 AbstractTrees.children(se::TreeQueryExpr) = se.children
 
 """
