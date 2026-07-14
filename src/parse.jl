@@ -98,16 +98,11 @@ function _parse(code::String, language::String; escape_chars = false, print_code
     escape_chars && (code = _enable_escape_chars(code))
     print_code && println("---\n$code\n---\n")
 
-    mktemp() do tmp_path, io
+    return mktemp() do tmp_path, io
         write(io, code)
         flush(io)
         ts_cmd = _make_parse_file_cmd(tmp_path, language)  # reuse the existing file parser
-        out = try
-            read(ts_cmd, String)
-        catch e
-            @warn "Could not parse code snippet.\n$e"
-            ""
-        end
+        out = read(ts_cmd, String)
         return replace(out, "\n" => "")
     end
 end

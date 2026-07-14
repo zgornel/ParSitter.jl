@@ -7,3 +7,4 @@ string-delim = "\""
 skip-children-types = []
 override-types = {}
 keep-content-ts-types = ["identifier"]
+skip-content-ts-types = ["sources", "source", "source_file"]
