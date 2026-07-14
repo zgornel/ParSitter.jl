@@ -152,12 +152,11 @@ Parse code using tree-sitter and return the XML representation.
 function _parse_code_to_xml_tree(code::String, language::String)
     try
         _output = ParSitter.parse(ParSitter.Code(code), language; escape_chars = false, print_code = false)
-        if isempty(_output.parsed)
-            error("Tree-sitter parsing returned empty output for language: $language")
-        end
-        return ParSitter.build_xml_tree(_output)
+        xmltree = ParSitter.build_xml_tree(_output)
+        return xmltree
     catch e
-        error("Failed to parse code with tree-sitter: $(e.msg)")
+        @warn "Could not parse generated code, probably wrong query language formatting.\n$e"
+        return nothing
     end
 end
 
@@ -283,6 +282,7 @@ function parse_code_snippet_to_query(
     end
     # step 3: parse code with treesitter
     _tree = _parse_code_to_xml_tree(transformed_code, language)
+    _tree === nothing && return nothing, symbol_map, transformed_code  # return symbol map, transformed code for debugging
     # step 4: transform parsed tree to TreeQueryExpr
     query_expr = _xml_node_to_tqexpr(_tree.root, symbol_map, language)
     return query_expr, symbol_map, transformed_code

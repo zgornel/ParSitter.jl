@@ -175,6 +175,7 @@ function check_tq_tree(tree::TreeQueryExpr)
     return @assert length(captures) == length(unique(captures)) "Found non-unique capture keys in query"
 end
 
+check_tq_tree(::Nothing) = throw(ErrorException("Query tree is nothing, probably query generation failed."))
 
 """
     build_xml_tree(tree_sitter_xml_ast::String)
