@@ -229,7 +229,8 @@ How query generation from snippet works internally:
 
 ### Querying code
 
-Below is a minimal example of querying a snippet of code written in R.
+#### R
+Below is a minimal example of querying a snippet of modelling code written in R for comments and function parameters.
 ```@repl index
 using ParSitter, AbstractTrees
 _target_nodevalue(n) = strip(replace(n.content, r"[\s]" => ""));
@@ -269,6 +270,58 @@ filter!(first, query_results); # keep only matches
 println(query_results[1][2])
 ```
 More examples of tree-matching behavior can be found in the [query language tests](https://github.com/zgornel/ParSitter.jl/blob/master/test/ql.jl).
+
+#### Python
+Below is an example of querying `from ... import ...` statements in Python code for the imported symbols and the corresponding libraries.
+```@repl index
+using ParSitter, AbstractTrees;
+#_target_nodevalue(n) = strip(string(n.name));
+_target_nodevalue(n) = (string.(strip(replace(n.content, r"[\s]" => ""))), n.name);
+_query_nodevalue(n) = (ifelse(ParSitter.is_capture_node(n).is_match, string(split(n.head.value, "@")[1]), n.head.value), n.head.type);
+_capture_function(n) = (v = strip(replace(n.content, r"[\s]" => "")), srow = n["srow"], erow = n["erow"], scol = n["scol"], ecol = n["ecol"]);
+_capture_on_empty_query_value(tt, qt) = ((ParSitter.is_capture_node(qt; capture_sym = "@").is_match &&
+                                                   isempty(first(_query_nodevalue(qt)))
+                                            ) || first(_query_nodevalue(qt)) == "*"
+                                         ) && _target_nodevalue(tt)[2] == _query_nodevalue(qt)[2];
+_node_equality_function(n1, n2) = begin
+        return n1[2] == n2[2] && n1[1] == n2[1] # type and value equality
+end;
+code = """
+from sklearn.svm import SVC
+from sklearn.preprocessing import StandardScaler
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+X, y = make_classification(random_state=0)
+X_train, X_test, y_train, y_test = train_test_split(X, y,
+                                                    random_state=0)
+pipe = Pipeline([('scaler', StandardScaler()), ('svc', SVC())])
+pipe2 = sklearn.pipeline.Pipeline([('svc', SVC())])
+# The pipeline can be used as any other estimator
+# and avoids leaking the test set into the train set
+pipe.fit(X_train, y_train)
+#pipe.fit(X_train, y_train).score(X_test, y_test)
+# An estimator's parameter can be set using '__' syntax
+pipe.set_params(svc__C=10).fit(X_train, y_train).score(X_test, y_test)
+""";
+
+query_snippet = "from {{library::DOTTED_NAME}} import {{symbol::DOTTED_NAME}}";
+query_expr, _sm , _tc = parse_code_snippet_to_query(query_snippet, "python");
+print_tree(query_expr, maxdepth=20)
+target = ParSitter.build_xml_tree(ParSitter.parse(ParSitter.Code(code),"python"))
+@time results = ParSitter.query(
+            target.root,
+            query_expr;
+            match_type = :strict,
+            target_tree_nodevalue = _target_nodevalue,
+            query_tree_nodevalue = _query_nodevalue,
+            capture_function = _capture_function,
+            node_comparison_yields_true = _capture_on_empty_query_value,
+            node_equality_function = _node_equality_function);
+filter!(first, results)
+results[1][2]["library"]
+results[1][2]["symbol"]
+```
 
 ## CLI-based parsing
 **ParSitter.jl** comes with an CLI tool that allows easy parsing of inline code, files and directories. Currently, it supports the following languages: [Python](https://www.python.org/), [Julia](https://julialang.org/), [C](https://en.wikipedia.org/wiki/C_(programming_language)), [C#](https://en.wikipedia.org/wiki/C_Sharp_(programming_language)) and [R](https://www.r-project.org/). This can be extended by adding more language files in [`languages/`](https://github.com/zgornel/ParSitter.jl/tree/master/languages).
