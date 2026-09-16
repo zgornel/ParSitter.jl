@@ -76,6 +76,23 @@
     @testset "query pattern 1 (function call, multiple returns)" begin
         query_snippet = "{{::IDENTIFIER}}, {{::IDENTIFIER}} = {{function::IDENTIFIER}}({{args::ARGUMENT_LIST}})"
         generated_query, _, _ = ParSitter.QueryLanguage.parse_code_snippet_to_query(query_snippet, language)
+        @testset "match_type=:strict (OK)" begin
+            query_results = ParSitter.query(
+                target.root,
+                generated_query;
+                match_type = :strict,
+                target_tree_nodevalue = _target_nodevalue,
+                query_tree_nodevalue = _query_nodevalue,
+                capture_function = _capture_function,
+                node_comparison_yields_true = _capture_on_empty_query_value,
+                node_equality_function = _node_equality_function
+            )
+            filter!(first, query_results)
+            @test length(query_results) == 1
+            @test length(query_results[1][2]["function"]) == 2  # matches 'make_classification', 'Pipeline'
+            @test length(query_results[1][2]["args"]) == 2  # matches argument lists for 'make_classification', 'Pipeline'
+        end
+
         @testset "match_type=:speculative (WRONG)" begin
             query_results = ParSitter.query(
                 target.root,
@@ -90,7 +107,7 @@
             filter!(first, query_results)
             @test length(query_results) == 1
             @test length(query_results[1][2]["function"]) == 1  # matches 'make_classification'
-            @test length(query_results[1][2]["args"]) == 1  # matches 'make_classification'
+            @test length(query_results[1][2]["args"]) == 1  # matches argument list for 'make_classification'
         end
 
         @testset "match_type=:nonstrict (OK)" begin
@@ -107,7 +124,7 @@
             filter!(first, query_results)
             @test length(query_results) == 1
             @test length(query_results[1][2]["function"]) == 2  # matches 'make_classification', 'Pipeline'
-            @test length(query_results[1][2]["args"]) == 2  # matches 'make_classification', 'Pipeline'
+            @test length(query_results[1][2]["args"]) == 2  # matches argument lists for 'make_classification', 'Pipeline'
         end
     end
 
@@ -115,6 +132,22 @@
     @testset "query pattern 2-1 (object instantiation, function call)" begin
         query_snippet = "{{::IDENTIFIER}} = {{function::IDENTIFIER}}({{args::ARGUMENT_LIST}})"
         generated_query, _, _ = ParSitter.QueryLanguage.parse_code_snippet_to_query(query_snippet, language)
+        @testset "match_type=:strict (OK)" begin
+            query_results = ParSitter.query(
+                target.root,
+                generated_query;
+                match_type = :strict,
+                target_tree_nodevalue = _target_nodevalue,
+                query_tree_nodevalue = _query_nodevalue,
+                capture_function = _capture_function,
+                node_comparison_yields_true = _capture_on_empty_query_value,
+                node_equality_function = _node_equality_function
+            )
+            filter!(first, query_results)
+            @test length(query_results) == 1
+            @test length(query_results[1][2]["function"]) == 1  # matches 'Pipeline'
+            @test length(query_results[1][2]["args"]) == 1
+        end
         @testset "match_type=:speculative (OK)" begin
             query_results = ParSitter.query(
                 target.root,
@@ -154,6 +187,24 @@
     @testset "query pattern 2-2 (object instantiation, module+function call)" begin
         query_snippet = "{{::IDENTIFIER}} = {{lib::IDENTIFIER}}.{{sublib::IDENTIFIER}}.{{function::IDENTIFIER}}({{args::ARGUMENT_LIST}})"
         generated_query, _, _ = ParSitter.QueryLanguage.parse_code_snippet_to_query(query_snippet, language)
+        @testset "match_type=:strict (OK)" begin
+            query_results = ParSitter.query(
+                target.root,
+                generated_query;
+                match_type = :strict,
+                target_tree_nodevalue = _target_nodevalue,
+                query_tree_nodevalue = _query_nodevalue,
+                capture_function = _capture_function,
+                node_comparison_yields_true = _capture_on_empty_query_value,
+                node_equality_function = _node_equality_function
+            )
+            filter!(first, query_results)
+            @test length(query_results) == 1  # matches the 'pipe2 = sklearn.pipeline.Pipeline(...)' line
+            @test length(query_results[1][2]["function"]) == 1  # matches 'Pipeline'
+            @test length(query_results[1][2]["lib"]) == 1  # matches 'sklearn'
+            @test length(query_results[1][2]["sublib"]) == 1  # matches 'pipeline'
+            @test length(query_results[1][2]["args"]) == 1
+        end
         @testset "match_type=:speculative (OK)" begin
             query_results = ParSitter.query(
                 target.root,
@@ -169,7 +220,7 @@
             @test length(query_results) == 1  # matches the 'pipe2 = sklearn.pipeline.Pipeline(...)' line
             @test length(query_results[1][2]["function"]) == 1  # matches 'Pipeline'
             @test length(query_results[1][2]["lib"]) == 1  # matches 'sklearn'
-            @test length(query_results[1][2]["function"]) == 1  # matches 'pipeline'
+            @test length(query_results[1][2]["sublib"]) == 1  # matches 'pipeline'
             @test length(query_results[1][2]["args"]) == 1
         end
 
@@ -197,6 +248,22 @@
     @testset "query pattern 3 (parameter capture in object instantiation)" begin
         query_snippet = "{{::IDENTIFIER}} = Pipeline( [ ({{::STRING}}, {{pipe_object::IDENTIFIER}}()) ] )"
         generated_query, _, _ = ParSitter.QueryLanguage.parse_code_snippet_to_query(query_snippet, language)
+        @testset "match_type=:strict (OK, all matches)" begin
+            query_results = ParSitter.query(
+                target.root,
+                generated_query;
+                match_type = :strict,
+                target_tree_nodevalue = _target_nodevalue,
+                query_tree_nodevalue = _query_nodevalue,
+                capture_function = _capture_function,
+                node_comparison_yields_true = _capture_on_empty_query_value,
+                node_equality_function = _node_equality_function
+            )
+            filter!(first, query_results)
+            @test length(query_results) == 1
+            @test length(query_results[1][2]["pipe_object"]) == 2  # matches 'StandardScaler' and 'SVC'
+            @test isempty(setdiff(map(x->x.v, query_results[1][2]["pipe_object"]), ["SVC", "StandardScaler"]))  # matches 'StandardScaler'
+        end
         @testset "match_type=:speculative (OK, first match)" begin
             query_results = ParSitter.query(
                 target.root,
@@ -228,7 +295,7 @@
             filter!(first, query_results)
             @test length(query_results) == 1
             @test length(query_results[1][2]["pipe_object"]) == 2  # matches 'StandardScaler' and 'SVC'
-            @test isempty(setdiff(map(x -> x.v, query_results[1][2]["pipe_object"]), ["SVC", "StandardScaler"]))  # matches 'StandardScaler'
+            @test isempty(setdiff(map(x->x.v, query_results[1][2]["pipe_object"]), ["SVC", "StandardScaler"]))  # matches 'StandardScaler'
         end
     end
 
@@ -236,6 +303,22 @@
     @testset "query pattern 4 (object method call)" begin
         query_snippet = "{{object::IDENTIFIER}}.fit({{args::ARGUMENT_LIST}})"
         generated_query, _, _ = ParSitter.QueryLanguage.parse_code_snippet_to_query(query_snippet, language)
+        @testset "match_type=:strict (OK)" begin
+            query_results = ParSitter.query(
+                target.root,
+                generated_query;
+                match_type = :strict,
+                target_tree_nodevalue = _target_nodevalue,
+                query_tree_nodevalue = _query_nodevalue,
+                capture_function = _capture_function,
+                node_comparison_yields_true = _capture_on_empty_query_value,
+                node_equality_function = _node_equality_function
+            )
+            filter!(first, query_results)
+            @test length(query_results) == 1
+            @test length(query_results[1][2]["object"]) == 1  # matches 'pipe'
+            @test query_results[1][2]["object"][1].v == "pipe"
+        end
         @testset "match_type=:speculative (OK)" begin
             query_results = ParSitter.query(
                 target.root,
@@ -275,6 +358,24 @@
     @testset "query pattern 5 (symbol capture in from import)" begin
         query_snippet = "from {{::IDENTIFIER}}.{{::IDENTIFIER}} import {{symbol::DOTTED_NAME}}"
         generated_query, _, _ = ParSitter.QueryLanguage.parse_code_snippet_to_query(query_snippet, language)
+        @testset "match_type=:strict (OK)" begin
+            query_results = ParSitter.query(
+                target.root,
+                generated_query;
+                match_type = :strict,
+                target_tree_nodevalue = _target_nodevalue,
+                query_tree_nodevalue = _query_nodevalue,
+                capture_function = _capture_function,
+                node_comparison_yields_true = _capture_on_empty_query_value,
+                node_equality_function = _node_equality_function
+            )
+            filter!(first, query_results)
+            @test length(query_results) == 1
+            @test length(query_results[1][2]["symbol"]) == 5  # matches all imported symbols
+            @test isempty(setdiff(map(x->x.v, query_results[1][2]["symbol"]),
+                                  ["SVC", "StandardScaler", "make_classification", "train_test_split", "Pipeline"]))  # matches all imported symbols
+        end
+
         @testset "match_type=:speculative (WRONG)" begin
             query_results = ParSitter.query(
                 target.root,
@@ -306,12 +407,65 @@
             filter!(first, query_results)
             @test length(query_results) == 1
             @test length(query_results[1][2]["symbol"]) == 5  # matches all imported symbols
-            @test isempty(
-                setdiff(
-                    map(x -> x.v, query_results[1][2]["symbol"]),
-                    ["SVC", "StandardScaler", "make_classification", "train_test_split", "Pipeline"]
-                )
-            )  # matches all imported symbols
+            @test isempty(setdiff(map(x->x.v, query_results[1][2]["symbol"]),
+                                  ["SVC", "StandardScaler", "make_classification", "train_test_split", "Pipeline"]))  # matches all imported symbols
+        end
+    end
+
+
+    @testset "query pattern 6 (imported library capture in from import)" begin
+        query_snippet = "from {{library::DOTTED_NAME}} import {{::IDENTIFIER}}"
+        generated_query, _, _ = ParSitter.QueryLanguage.parse_code_snippet_to_query(query_snippet, language)
+        @testset "match_type=:strict (OK)" begin
+            query_results = ParSitter.query(
+                target.root,
+                generated_query;
+                match_type = :strict,
+                target_tree_nodevalue = _target_nodevalue,
+                query_tree_nodevalue = _query_nodevalue,
+                capture_function = _capture_function,
+                node_comparison_yields_true = _capture_on_empty_query_value,
+                node_equality_function = _node_equality_function
+            )
+            filter!(first, query_results)
+            @test length(query_results) == 1
+            @test length(query_results[1][2]["library"]) == 5  # matches all importing libraries
+            @test isempty(setdiff(map(x->x.v, query_results[1][2]["library"]),
+                                  ["sklearn.svm", "sklearn.preprocessing", "sklearn.datasets",
+                                  "sklearn.model_selection", "sklearn.pipeline"]))
+        end
+
+        @testset "match_type=:speculative (WRONG)" begin
+            query_results = ParSitter.query(
+                target.root,
+                generated_query;
+                match_type = :speculative,
+                target_tree_nodevalue = _target_nodevalue,
+                query_tree_nodevalue = _query_nodevalue,
+                capture_function = _capture_function,
+                node_comparison_yields_true = _capture_on_empty_query_value,
+                node_equality_function = _node_equality_function
+            )
+            filter!(first, query_results)
+            @test length(query_results) == 1
+            @test length(query_results[1][2]["library"]) == 1  # matches only 'sklearn.svm' (i.e. first 'from' statement)
+            @test query_results[1][2]["library"][1].v == "sklearn.svm"
+        end
+
+        @testset "match_type=:nonstrict (WRONG)" begin
+            query_results = ParSitter.query(
+                target.root,
+                generated_query;
+                match_type = :nonstrict,
+                target_tree_nodevalue = _target_nodevalue,
+                query_tree_nodevalue = _query_nodevalue,
+                capture_function = _capture_function,
+                node_comparison_yields_true = _capture_on_empty_query_value,
+                node_equality_function = _node_equality_function
+            )
+            filter!(first, query_results)
+            @test length(query_results) == 1
+            @test length(query_results[1][2]["library"]) == 10  # matches both importing libraries and imported symbols
         end
     end
 end

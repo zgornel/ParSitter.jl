@@ -116,7 +116,7 @@ target_tq = ParSitter.build_tq_tree(target);
 print_tree(target_tq);
 print_tree(query_tq);
 ```
-The `:strict` query mode matches exactly i.e. order counts as well as values, query nodes to target tree nodes.
+The `:strict` query mode matches matches query sub-trees to the permutations of ordered target sub-trees i.e. that follow the relative order as in the original target tree. In this case, the relative order of the query sub-trees does matter.
 ```@repl index
 r=ParSitter.query(target_tq,
                   query_tq;
@@ -127,7 +127,7 @@ r=ParSitter.query(target_tq,
                   node_comparison_yields_true = _when_to_yield_true);
 map(t->t[1:2], r)
 ```
-The `:nonstrict` query mode will match all nodes if possible.
+The `:nonstrict` query mode will match all nodes if possible, meaning query sub-trees against all unique permutations of target sub-trees. In this case, the order of the query sub-tree nodes with respect to the target ones does not matter.
 ```@repl index
 r=ParSitter.query(target_tq,
                   query_tq;
@@ -149,7 +149,7 @@ map(t->t[1:2], r)
 
 !!! compat "This feature is only available if v0.2.0"
 
-The `:speculative` matching mode is faster that `:nonstrict` because it stops after the first sub-tree match at each level during the recursive search. The result is that it will return a single value for each named capture even if more could be retrieved.
+The `:speculative` matching mode is faster that `:nonstrict` because it stops after the first sub-tree match at each level during the recursive search. The result is that it will return a single value for each named capture even if more could be retrieved. Order of the query sub-trees does matter.
 ```@repl index
 _when_to_yield_true(tt, qt) =
     (

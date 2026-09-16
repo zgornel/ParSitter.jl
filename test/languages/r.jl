@@ -73,7 +73,18 @@
             node_comparison_yields_true = _capture_on_empty_query_value
         )
         filter!(first, query_results) # keep only matches
-        @test length(query_results) == 0  # no match
+        @test length(query_results) == 1  # single match
+
+        CORRECT_CAPTURES = [
+            "family" => "binomial",
+            "id_val" => "\"linear\"",
+            "identifier" => "link",
+        ]  # no spaces in comments
+        _, qres = first(query_results)
+        @test length(keys(qres)) == 3  # there are 3 capture patterns
+        for (k, correct_val) in CORRECT_CAPTURES
+            @test qres[k][1].v == correct_val
+        end
     end
 
     @testset "match_type=:strict, unordered arguments: (NO MATCHES)" begin
@@ -169,7 +180,7 @@
             "comment" => "#acomment",
         ]  # no spaces in comments
         _, qres = first(query_results)
-        @test length(keys(qres)) == 4  # there are 3 capture patterns
+        @test length(keys(qres)) == 4  # there are 4 capture patterns
         for (k, correct_val) in CORRECT_CAPTURES
             @test qres[k][1].v == correct_val
         end

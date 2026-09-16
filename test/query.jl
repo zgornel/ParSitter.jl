@@ -88,8 +88,25 @@ _capture_on_empty_query_value(tt, qt) =
         @test sum(p -> !isempty(p[2]), results) == 0  # no captured values
     end
     @testset "case 5" begin
+        # target:
+        # 1
+        # ├─ 2
+        # ├─ 3
+        # ├─ 4
+        # │  ├─ 2
+        # │  ├─ 6
+        # │  └─ 1
+        # │     ├─ 2
+        # │     └─ 1
+        # └─ "v0"
+        #    ├─ 2
+        #    └─ "v2"
+        # query:
+        # "v0"
+        # ├─ "2"
+        # └─ "v2"
         target = ParSitter.build_tq_tree(
-            (1, 2, 3, (4, 2, 6, (1, 2, 1)), ("@v0", 2, "@v2"))
+            (1, 2, 3, (4, 2, 6, (1, 2, 1)), ("v0", 2, "v2"))
         )
         query = ParSitter.build_tq_tree(
             ("@v0", "2", "@v2")
@@ -104,12 +121,12 @@ _capture_on_empty_query_value(tt, qt) =
             node_comparison_yields_true = _capture_on_empty_query_value
         )
         @test sum(first, results) == 4
-        @test sum(p -> !isempty(p[2]), results) == 3
+        @test sum(p -> !isempty(p[2]), results) == 4
         expected_captures = [
-            MultiDict("v2" => 3, "v0" => 1),
-            MultiDict("v2" => 6, "v0" => 4),
+            MultiDict([["v2" => v for v in [3, 4, "v0"]]..., "v0" => 1]),
+            MultiDict([["v2" => v for v in [6, 1]]..., "v0" => 4]),
             MultiDict("v2" => 1, "v0" => 1),
-            MultiDict(),
+            MultiDict("v2" => "v2", "v0" => "v0"),
         ]
         for (is_match, captures) in results
             if is_match
