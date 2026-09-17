@@ -20,7 +20,8 @@ function __init__()
         STRING_DELIMS,
         SKIP_CHILDREN_TYPES,
         OVERRIDE_TYPES,
-        KEEP_CONTENT_TS_TYPES;
+        KEEP_CONTENT_TS_TYPES,
+        SKIP_CONTENT_TS_TYPES;
         language_directory
     )
 end

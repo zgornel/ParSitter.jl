@@ -27,12 +27,36 @@ end
 
 # AbstractTrees interface for tree-sitter generated XML ASTs
 AbstractTrees.children(t::EzXML.Node) = collect(EzXML.eachelement(t));
-AbstractTrees.nodevalue(t::EzXML.Node) = (
-    t.name,
-    "0x" * string(hash(t.ptr); base = 16),
-    (row = ("$(t["srow"]):$(t["erow"])"), col = "($(t["scol"]):$(t["ecol"]))"),
-    _strip_spaces(t.content) |> x -> ifelse(length(x) >= 20, x[1:min(length(x), 20)] * "...", x),
-)
+AbstractTrees.nodevalue(t::EzXML.Node) = begin
+    _name = if hasproperty(t, :name)
+        t.name
+    else
+        @error "Could not extract property :name from EzXML node"
+    end
+    _hash = if hasproperty(t, :ptr)
+        "0x" * string(hash(t.ptr); base = 16)
+    else
+        @error "Could not extract property :ptr from EzXML node"
+    end
+    _row = if haskey(t, "srow") && haskey(t, "erow")
+        "$(t["srow"]):$(t["erow"])"
+    else
+        @debug "Could not extract keys :srow and/or :erow from EzXML node"
+        "-1:-1"
+    end
+    _col = if haskey(t, "scol") && haskey(t, "ecol")
+        "$(t["scol"]):$(t["ecol"])"
+    else
+        @debug "Could not extract properties :scol and/or :ecol from EzXML node"
+        "-1:-1"
+    end
+    _content = if hasproperty(t, :content)
+        _strip_spaces(t.content) |> x -> ifelse(length(x) >= 20, x[1:min(length(x), 20)] * "...", x)
+    else
+        ""
+    end
+    return (_name, _hash, (row = _row, col = _col), _content)
+end
 AbstractTrees.parent(t::EzXML.Node) = t.parentnode
 AbstractTrees.nextsibling(t::EzXML.Node) = EzXML.nextelement(t)
 AbstractTrees.prevsibling(t::EzXML.Node) = EzXML.prevelement(t)
@@ -70,6 +94,7 @@ used for the head as well as children. Usually, nodes are `::String`s.
 end
 
 AbstractTrees.nodevalue(se::TreeQueryExpr) = _query_node_value(se.head)
+AbstractTrees.nodevalue(se::TreeQueryExpr{TreeQueryNode}) = _query_node_value(se.head), _query_node_type(se.head)
 AbstractTrees.children(se::TreeQueryExpr) = se.children
 
 """
@@ -150,6 +175,7 @@ function check_tq_tree(tree::TreeQueryExpr)
     return @assert length(captures) == length(unique(captures)) "Found non-unique capture keys in query"
 end
 
+check_tq_tree(::Nothing) = throw(ErrorException("Query tree is nothing, probably query generation failed."))
 
 """
     build_xml_tree(tree_sitter_xml_ast::String)
@@ -159,7 +185,7 @@ Internally, calls `EzXML.parsexml`.
 """
 function build_xml_tree(tree_sitter_xml_ast::String)
     tmp = replace(tree_sitter_xml_ast, "\n" => "")
-    return xml = EzXML.parsexml(tmp)
+    return EzXML.parsexml(tmp)
 end
 
 """
@@ -203,6 +229,27 @@ is_capture_node(n::TreeQueryExpr{TreeQueryNode}; capture_sym = DEFAULT_CAPTURE_S
 
 is_capture_node(n; capture_sym = DEFAULT_CAPTURE_SYM) = (is_match = false, capture_key = "")
 
+"""
+Function that returns the permutations of v in which the elements appear
+in an order consistent with the index in v.
+```
+julia> v = [1, 5, -1]
+       p = Combinatorics.multiset_permutations(v, 2) |> collect
+       keep_sorted_permutations(v, p)
+3-element Vector{Vector{Int64}}:
+ [1, 5]
+ [1, -1]
+ [5, -1]
+```
+"""
+function keep_sorted_permutations(v, permutations)
+    good = falses(length(permutations))
+    for (i, permutation) in enumerate(permutations)
+        indexes = indexin(permutation, v)
+        good[i] = issorted(indexes)
+    end
+    return permutations[good]
+end
 
 """
     function match_tree(target_tree,
@@ -297,30 +344,42 @@ function match_tree(
             end
         end
         if match_type == :strict
-            # All query sub-trees must match the target sub-trees: in the same order,
-            # up to the last query tree. The rest of the target sub-trees are ignored.
+            # permutations with strict target tree order of sub-trees of the target tree
+            # are matched against the query tree; if any of them matches, the function returns
+            subtrees_found = Bool[]
             _match_cache = Dict()
-            subtree_results = [
-                match_tree(
-                        t, q;
-                        match_cache = _match_cache,
-                        captured_symbols,
-                        match_type,
-                        is_capture_node,
-                        target_tree_nodevalue,
-                        query_tree_nodevalue,
-                        capture_function,
-                        node_comparison_yields_true,
-                        node_equality_function
-                    )
-                    for (t, q) in zip(c1, c2)
-            ]
-            for (subtree_found, subtree_captures, _) in subtree_results
-                merge!(captured_symbols, subtree_captures)
-                found &= subtree_found
+            for c1_permutation in keep_sorted_permutations(c1, collect(Combinatorics.multiset_permutations(c1, length(c2))))
+                _captured_symbols = MultiDict()
+                subtree_results = [
+                    match_tree(
+                            t, q;
+                            match_cache = _match_cache,
+                            captured_symbols = _captured_symbols,
+                            match_type = :strict,
+                            is_capture_node,
+                            target_tree_nodevalue,
+                            query_tree_nodevalue,
+                            capture_function,
+                            node_comparison_yields_true,
+                            node_equality_function
+                        )
+                        for (t, q) in zip(c1_permutation, c2)
+                ]
+                # All sub-trees of a specific permutation must match
+                _found = all(first, subtree_results)
+                if _found
+                    for (_, subtree_captures, _) in subtree_results
+                        merge!(captured_symbols, subtree_captures)  # add matched symbols
+                    end
+                end
+                push!(subtrees_found, _found)  # store whether sub-tree permutation was found
             end
+            # Resolve matching:
+            # - any of the matched sub-trees (from permutations will do)
+            # - logical AND is used to transmit finding recursively upwards
+            found &= any(subtrees_found)
         elseif match_type == :nonstrict
-            # permutations of sub-trees of the target tree are matched against
+            # unordered permutations of sub-trees of the target tree are matched against
             # the query tree; if any of them matches, the function returns
             subtrees_found = Bool[]
             _match_cache = Dict()

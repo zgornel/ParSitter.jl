@@ -36,6 +36,14 @@ queries and not replaced with the wildcard '*'.
 """
 const KEEP_CONTENT_TS_TYPES = Dict{String, Vector{String}}()
 
+"""
+`tree-sitter` node types whose content will not be checked as to whether
+it makes the subject of a query replacement. This is useful for example
+when the source code is a simple comment. In this case, `sources`, `source`
+and other types have the same content as the `comment` node (i.e. the comment)..
+"""
+const SKIP_CONTENT_TS_TYPES = Dict{String, Vector{String}}()
+
 
 """
 Reads the contents of `language_directory` and populates the constants:
@@ -48,7 +56,8 @@ function populate!(
         string_delims,
         skip_children_types,
         override_types,
-        keep_content_ts_types;
+        keep_content_ts_types,
+        skip_content_ts_types;
         language_directory = ""
     )
 
@@ -72,6 +81,7 @@ function populate!(
                 _skip_children_types = get(contents, "skip-children-types", nothing)
                 _override_types = get(contents, "override-types", nothing)
                 _keep_content_ts_types = get(contents, "keep-content-ts-types", nothing)
+                _skip_content_ts_types = get(contents, "skip-content-ts-types", nothing)
                 # Checks of the fields presence
                 @assert !isnothing(_parsitter_name) "Missing \"parsitter-name\" field @$file"
                 @assert !isnothing(_tree_sitter_scope) "Missing \"tree-sitter-scope\" field @$file"
@@ -81,6 +91,7 @@ function populate!(
                 @assert !isnothing(_skip_children_types) "Missing \"skip-children-types\" field @$file"
                 @assert !isnothing(_override_types) "Missing \"override-types\" field @$file"
                 @assert !isnothing(_keep_content_ts_types) "Missing \"keep-content-ts-types\" field @$file"
+                @assert !isnothing(_skip_content_ts_types) "Missing \"skip-content-ts-types\" field @$file"
                 # Checks of the fields values
                 @assert !isempty(_file_extensions) "Empty\"file-extensions\" value @$file"
                 @assert !isempty(_type_replacements) "Empty \"type-replacements\" value @$file"
@@ -93,6 +104,7 @@ function populate!(
                     push!(skip_children_types, _parsitter_name => _skip_children_types)
                     push!(override_types, _parsitter_name => _override_types)
                     push!(keep_content_ts_types, _parsitter_name => _keep_content_ts_types)
+                    push!(skip_content_ts_types, _parsitter_name => _skip_content_ts_types)
                 end
             catch e
                 @warn "Could not parse language file @$full_file\n$e"
