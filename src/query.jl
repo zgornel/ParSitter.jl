@@ -185,7 +185,7 @@ Internally, calls `EzXML.parsexml`.
 """
 function build_xml_tree(tree_sitter_xml_ast::String)
     tmp = replace(tree_sitter_xml_ast, "\n" => "")
-    return xml = EzXML.parsexml(tmp)
+    return EzXML.parsexml(tmp)
 end
 
 """

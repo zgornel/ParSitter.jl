@@ -262,7 +262,7 @@
             filter!(first, query_results)
             @test length(query_results) == 1
             @test length(query_results[1][2]["pipe_object"]) == 2  # matches 'StandardScaler' and 'SVC'
-            @test isempty(setdiff(map(x->x.v, query_results[1][2]["pipe_object"]), ["SVC", "StandardScaler"]))  # matches 'StandardScaler'
+            @test isempty(setdiff(map(x -> x.v, query_results[1][2]["pipe_object"]), ["SVC", "StandardScaler"]))  # matches 'StandardScaler'
         end
         @testset "match_type=:speculative (OK, first match)" begin
             query_results = ParSitter.query(
@@ -295,7 +295,7 @@
             filter!(first, query_results)
             @test length(query_results) == 1
             @test length(query_results[1][2]["pipe_object"]) == 2  # matches 'StandardScaler' and 'SVC'
-            @test isempty(setdiff(map(x->x.v, query_results[1][2]["pipe_object"]), ["SVC", "StandardScaler"]))  # matches 'StandardScaler'
+            @test isempty(setdiff(map(x -> x.v, query_results[1][2]["pipe_object"]), ["SVC", "StandardScaler"]))  # matches 'StandardScaler'
         end
     end
 
@@ -372,8 +372,12 @@
             filter!(first, query_results)
             @test length(query_results) == 1
             @test length(query_results[1][2]["symbol"]) == 5  # matches all imported symbols
-            @test isempty(setdiff(map(x->x.v, query_results[1][2]["symbol"]),
-                                  ["SVC", "StandardScaler", "make_classification", "train_test_split", "Pipeline"]))  # matches all imported symbols
+            @test isempty(
+                setdiff(
+                    map(x -> x.v, query_results[1][2]["symbol"]),
+                    ["SVC", "StandardScaler", "make_classification", "train_test_split", "Pipeline"]
+                )
+            )  # matches all imported symbols
         end
 
         @testset "match_type=:speculative (WRONG)" begin
@@ -407,8 +411,12 @@
             filter!(first, query_results)
             @test length(query_results) == 1
             @test length(query_results[1][2]["symbol"]) == 5  # matches all imported symbols
-            @test isempty(setdiff(map(x->x.v, query_results[1][2]["symbol"]),
-                                  ["SVC", "StandardScaler", "make_classification", "train_test_split", "Pipeline"]))  # matches all imported symbols
+            @test isempty(
+                setdiff(
+                    map(x -> x.v, query_results[1][2]["symbol"]),
+                    ["SVC", "StandardScaler", "make_classification", "train_test_split", "Pipeline"]
+                )
+            )  # matches all imported symbols
         end
     end
 
@@ -430,9 +438,15 @@
             filter!(first, query_results)
             @test length(query_results) == 1
             @test length(query_results[1][2]["library"]) == 5  # matches all importing libraries
-            @test isempty(setdiff(map(x->x.v, query_results[1][2]["library"]),
-                                  ["sklearn.svm", "sklearn.preprocessing", "sklearn.datasets",
-                                  "sklearn.model_selection", "sklearn.pipeline"]))
+            @test isempty(
+                setdiff(
+                    map(x -> x.v, query_results[1][2]["library"]),
+                    [
+                        "sklearn.svm", "sklearn.preprocessing", "sklearn.datasets",
+                        "sklearn.model_selection", "sklearn.pipeline",
+                    ]
+                )
+            )
         end
 
         @testset "match_type=:speculative (WRONG)" begin

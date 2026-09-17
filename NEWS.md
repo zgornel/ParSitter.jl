@@ -1,6 +1,7 @@
 v0.2.2
 ------
  - improved Python support
+ - improved `:strict` querying method
 
 v0.2.1
 ------
@@ -12,10 +13,10 @@ v0.2.0
  - `:speculative` i.e. first match query support
  - Package tests with Aqua.jl
  - Add public API
- - Bugfixes and performance improvements
+ - Bug fixes and performance improvements
 
 v0.1.0
 ------
  - Initial release
  - Support for parsing R, Python, Julia, C, C#
- - low-level queryies i.e. tree matching
+ - low-level queries i.e. tree matching
