@@ -7,7 +7,6 @@ using ParSitter
 using ArgParse
 using JSON
 
-# Function that parses Garamond's unix-socket client arguments
 function get_arguments(args::Vector{String})
     s = ArgParseSettings()
     @add_arg_table! s begin

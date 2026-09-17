@@ -5,6 +5,6 @@ file-extensions = [".py"]
 type-replacements = { EXPRESSION = "# some expression", BLOCK = "# code block", COMMENT = "#comment", IDENTIFIER = "var", DOTTED_NAME = "lib", NUMBER = "0", STRING = "\"\"", VARIABLE = "x", BOOLEAN = "True", FUNCTION = "def f(): pass", ARGUMENT_LIST="[]", PATTERN_LIST="a,b"}
 string-delim = "\""
 skip-children-types = ["BLOCK", "EXPRESSION", "ARGUMENT_LIST", "PATTERN LIST", "DOTTED_NAME"]
-override-types = {"BLOCK" = "block", "EXPRESION" = "expression_statement", "ARGUMENT_LIST" = "argument_list", "PATTERN_LIST"="pattern_list", "DOTTED_NAME"="dotted_name"}
+override-types = {BLOCK = "block", EXPRESION = "expression_statement", ARGUMENT_LIST = "argument_list", PATTERN_LIST="pattern_list", DOTTED_NAME="dotted_name"}
 keep-content-ts-types = ["identifier"]
 skip-content-ts-types = ["sources", "source", "module"]

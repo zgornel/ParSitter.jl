@@ -29,7 +29,7 @@ or alternatively, using the `pkg` mode
 
 ## Prerequisites
 
-ParSitter requires the tree-sitter CLI (≥ v0.20) and compiled parsers for the languages you want to use.
+ParSitter requires the tree-sitter CLI (≥ v0.25) and compiled parsers for the languages you want to use.
 Installation:
  - macOS: `brew install tree-sitter`
  - Linux: install `tree-sitter` using the distribution package manager or download binary from GitHub releases
