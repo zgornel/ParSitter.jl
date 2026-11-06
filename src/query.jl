@@ -125,9 +125,16 @@ build_tq_tree(t::Tuple) = begin
     end
 end
 
+"""
+Convert a `generic_node::T` to a `TreeQueryExpr`. Equivalent to `TreeQueryExpr(nodevalue(x), TreeQueryExpr[])
+"""
+Base.convert(::Type{ParSitter.TreeQueryExpr},
+             generic_node::T;
+             nodevalue=AbstractTrees.nodevalue) where T =
+    ParSitter.TreeQueryExpr(nodevalue(generic_node), ParSitter.TreeQueryExpr[])
 
 """
-Convert a tree `t` to a `TreeQueryExpr`. The node value is returned
+Convert a tree `t::Tuple` to a `TreeQueryExpr`. The node value is returned
 by `nodevalue` and children of the node returned by `children`.
 """
 Base.convert(

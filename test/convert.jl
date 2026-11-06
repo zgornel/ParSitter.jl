@@ -1,5 +1,7 @@
-@testset "conversions: Tuple -> TreeQueryExpr -> Tuple" begin
-    # Vector of input Tuples and outputs after two conversions: to TreeQueryExpr and Tuple
+@testset "Base.convert overloads" begin
+    @testset "TreeQueryExpr -> Tuple" begin
+    # Vector of pair of tuples: they generate equivaluent TreeQueryExpr however,
+    # the first form becomes the second when converting back to Tuple
     TTS = [
         (1,) => (1,),
         (1, 2, 3) => (1, 2, 3),
@@ -16,5 +18,19 @@
         # Convert back to Tuple and check against verification Tuples
         tt = convert(Tuple, tq)
         @test tt == t2
+    end
+    end
+
+    @testset "Tuple -> TreeQueryExpr -> Tuple" begin
+    TTS = [
+        (1,) => ((1,), (1,)),
+        (1, 2, 3) => ((1,2,3), 1, 2, 3),
+        (1, (2,)) => ((1,(2,)), 1, ((2,), (2,))),
+        (1, 2, (3,), 4, 5) => ((1, 2, (3,), 4, 5), 1, 2, ((3,), (3,)), 4, 5)
+    ]
+    for (t, t2) in TTS
+        tt = convert(Tuple, convert(ParSitter.TreeQueryExpr, t))
+        @test tt == t2
+    end
     end
 end
