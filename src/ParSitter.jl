@@ -27,8 +27,7 @@ function __init__()
 end
 
 # Public API
-export check_tree_sitter, # checks tree sitter install
-    parse, # parses code, files and directories
+export parse, # parses code, files and directories
     print_code_tree, # prints code using AbstractTrees
     build_tq_tree, # builds TreeQueryExpr's from tuples
     build_xml_tree, # builds an XML tree from XML string

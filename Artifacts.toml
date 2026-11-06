@@ -1,0 +1,69 @@
+[[tree-sitter]]
+git-tree-sha1 = "1def5b0af27be7889d2d616d8ef9da443a1ac9b0"
+os = "linux"
+arch = "x86_64"
+    [[tree-sitter.download]]
+    url = "https://github.com/zgornel/ParSitter.jl_artifacts/raw/master/tree-sitter/tree-sitter-linux-x64.tar.gz"
+    sha256 = "a24427d5f7dfe60556580a3da175f4d17044bfae5376f5bb85a1f087c283a647"
+
+[[tree-sitter]]
+git-tree-sha1 = "2f640c5f552329059c39c6471b4ce8181f8cb7a9"
+os = "linux"
+arch = "aarch64"
+    [[tree-sitter.download]]
+    url = "https://github.com/zgornel/ParSitter.jl_artifacts/raw/master/tree-sitter/tree-sitter-linux-arm64.tar.gz"
+    sha256 = "089dea3757a589822510a2be5bad034c0e9602000bf9581f9abd89a63563c1e4"
+
+[[tree-sitter]]
+git-tree-sha1 = "520e51e19a5724d2dc9ca876df13118291d811b0"
+os = "macos"
+arch = "x86_64"
+    [[tree-sitter.download]]
+    url = "https://github.com/zgornel/ParSitter.jl_artifacts/raw/master/tree-sitter/tree-sitter-macos-x64.tar.gz"
+    sha256 = "0e018ddb39c020c5f7363ef476a4d30e9f980e6192aca7f0d50165e90a1dc399"
+
+[[tree-sitter]]
+git-tree-sha1 = "8c73f2e47df52d5b67106a599d567c02485a5fff"
+os = "macos"
+arch = "aarch64"
+    [[tree-sitter.download]]
+    url = "https://github.com/zgornel/ParSitter.jl_artifacts/raw/master/tree-sitter/tree-sitter-macos-arm64.tar.gz"
+    sha256 = "1ba9b10d4940c73f49194978aeb0d09f66d150403a3b03b9c0ae35e5c34ce0e2"
+
+[[tree-sitter]]
+git-tree-sha1 = "e84e76e8f1849112fd2792933e1650cda0625e09"
+os = "windows"
+arch = "x86_64"
+    [[tree-sitter.download]]
+    url = "https://github.com/zgornel/ParSitter.jl_artifacts/raw/master/tree-sitter/tree-sitter-windows-x64.tar.gz"
+    sha256 = "f4ac7cebd25ef9165d8f9ea4b30966138da113e5a6e9a230ee2027b4f4e59c02"
+
+[tree-sitter-r]
+git-tree-sha1 = "6113dd1aeec2143454508ba36a0bbe4187ad96d6"
+    [[tree-sitter-r.download]]
+    url = "https://github.com/zgornel/ParSitter.jl_artifacts/raw/master/languages/tree-sitter-r.tar.gz"
+    sha256 = "8da16f8a7c9aaab257c49a53c52acb7121389ff4a16bc12ac114a685bb28c72d"
+
+[tree-sitter-python]
+git-tree-sha1 = "867daa0416b1352ee875023408b6d808415b4670" 
+    [[tree-sitter-python.download]]
+    url = "https://github.com/zgornel/ParSitter.jl_artifacts/raw/master/languages/tree-sitter-python.tar.gz"
+    sha256 = "7bce887eb2f33e94bf74a69645cf5138d4096720e54fd3269a6124c06b93c584"
+
+[tree-sitter-julia]
+git-tree-sha1 = "748cd55f16c836ad81cd3a4b50f603ed11665704"
+    [[tree-sitter-julia.download]]
+    url = "https://github.com/zgornel/ParSitter.jl_artifacts/raw/master/languages/tree-sitter-julia.tar.gz"
+    sha256 = "edc0a6edcbaa6d183a0fc002319312dcbc3d04d86ffb9d6cfb6f83502b1b3e08"
+
+[tree-sitter-c]
+git-tree-sha1 = "5f1c6fb7e591451f73db4afc2a30535b56f07d86"
+    [[tree-sitter-c.download]]
+    url = "https://github.com/zgornel/ParSitter.jl_artifacts/raw/master/languages/tree-sitter-c.tar.gz"
+    sha256 = "f3a2cdfbca39c79f60baf2ef62b42084c609782c76485de457ba36ff65d51baf"
+
+[tree-sitter-c-sharp]
+git-tree-sha1 = "1bbc71298d7e83af43f3a83ca9d333537f6a99b9"
+    [[tree-sitter-c-sharp.download]]
+    url = "https://github.com/zgornel/ParSitter.jl_artifacts/raw/master/languages/tree-sitter-c-sharp.tar.gz"
+    sha256 = "d7e9db699ad8ebd234cb6922d285efe128a408db3737d4fa0bab6c668e0fc5e6"

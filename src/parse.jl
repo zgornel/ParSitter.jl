@@ -1,3 +1,5 @@
+using Pkg.Artifacts
+
 """
     struct Directory
         name::String
@@ -53,27 +55,27 @@ end
 
 Base.isfile(::Nothing) = false
 
-"""
-    check_tree_sitter(; tree_sitter_path::Union{String,Nothing} = nothing)
-
-Verify that the tree-sitter CLI is available. Works on Linux, macOS, and Windows.
-Throws an informative error if not found.
-"""
-function check_tree_sitter(; tree_sitter_path = nothing)
-    cmd = isnothing(tree_sitter_path) ? `tree-sitter` : Cmd([tree_sitter_path])
-    version_output = try
-        read(`$cmd --version`, String)
-    catch
-        ""
-    end
-    @assert !isempty(strip(version_output)) "tree-sitter CLI not found in PATH (or at provided path). See README.md for installation instructions."
-    return nothing
-end
-
 # Returns a tree-sitter command
+TREE_SITTER_LIBS = Dict(
+    "r" => artifact"tree-sitter-r",
+    "python" => artifact"tree-sitter-python",
+    "julia" => artifact"tree-sitter-julia",
+    "c" => artifact"tree-sitter-c",
+    "cs" => artifact"tree-sitter-c-sharp",
+)
+
 function _make_parse_file_cmd(file::String, language::String)
-    _language = LANGUAGE_MAP[language]
-    return pipeline(`tree-sitter parse -q -x --scope $(_language) $(file)`, stderr = devnull)
+    tree_sitter_bin_path = try
+        if Sys.iswindows()
+            joinpath(artifact"tree-sitter", "tree-sitter.exe")
+        else
+            joinpath(artifact"tree-sitter", "tree-sitter")
+        end
+    catch e
+        @error("No tree-sitter binary artifact found. Supported are `linux`, `macos`, `windows` (x86_64/aarch64)")
+    end
+    tree_sitter_language_lib = TREE_SITTER_LIBS[language]
+    return pipeline(`$tree_sitter_bin_path parse -q -x -p $tree_sitter_language_lib $(file)`, stderr = devnull)
 end
 
 
@@ -94,7 +96,6 @@ and `\r` characters. If `print_code` is `true` it will print the code.
 """
 function _parse(code::String, language::String; escape_chars = false, print_code = false)
     check_language(language, LANGUAGE_MAP)
-    check_tree_sitter()
     escape_chars && (code = _enable_escape_chars(code))
     print_code && println("---\n$code\n---\n")
 
@@ -127,7 +128,6 @@ it to tree-sitter for parsing and returns a `ParseResult` with  parse results.
 """
 function Base.parse(file::File, language::String)
     check_language(language, LANGUAGE_MAP)
-    check_tree_sitter()
     _file = abspath(file.name)
     @debug "Parsing file @ $_file ..."
     ts_cmd = _make_parse_file_cmd(_file, language)
