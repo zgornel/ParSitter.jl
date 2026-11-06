@@ -1,3 +1,8 @@
+v0.2.4
+------
+ - move language .toml files to artifacts
+ - fixes in documentation
+
 v0.2.3
 ------
  - add tree-sitter artifacts

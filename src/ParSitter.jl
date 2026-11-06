@@ -1,4 +1,5 @@
 module ParSitter
+using Pkg.Artifacts
 
 # Includes
 include("utils.jl")  # init code, defaults, etc.
@@ -12,7 +13,7 @@ using Reexport
 # Init function: initializes languages
 function __init__()
     # Intialize
-    language_directory = joinpath(dirname(abspath(@__FILE__)), "..", "languages")
+    language_directory = joinpath(artifact"parsitter-language-map", "languages")
     return populate!(
         LANGUAGE_MAP,
         FILE_EXTENSIONS,

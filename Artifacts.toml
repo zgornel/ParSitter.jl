@@ -67,3 +67,9 @@ git-tree-sha1 = "1bbc71298d7e83af43f3a83ca9d333537f6a99b9"
     [[tree-sitter-c-sharp.download]]
     url = "https://github.com/zgornel/ParSitter.jl_artifacts/raw/master/languages/tree-sitter-c-sharp.tar.gz"
     sha256 = "d7e9db699ad8ebd234cb6922d285efe128a408db3737d4fa0bab6c668e0fc5e6"
+
+[parsitter-language-map]
+git-tree-sha1 = "dc7aac97954f51c04e2bb063ee64d565c1380486"
+    [[parsitter-language-map.download]]
+    url = "https://github.com/zgornel/ParSitter.jl_artifacts/raw/master/language_map/language_map.tar.gz"
+    sha256 = "58e93a7b05934786f192bfbb4f2160e83f8ecf0da53dc12c7b2505bcd7d5b507"

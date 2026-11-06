@@ -218,7 +218,7 @@ print_tree(query_expr)
 ```
 
 How query generation from snippet works internally:
- - placeholders are replaced with valid language-specific code (e.g., randomized identifiers or type-specific literals). Supported `CAPTURE_TYPE`s and associated code are present in [`ParSitter.DEFAULT_TYPE_REPLACEMENTS`](@ref)) and loaded from the [`languages/`](https://github.com/zgornel/ParSitter.jl/tree/master/languages) directory.
+ - placeholders are replaced with valid language-specific code (e.g., randomized identifiers or type-specific literals). Supported `CAPTURE_TYPE`s and associated code are present in [`ParSitter.DEFAULT_TYPE_REPLACEMENTS`](@ref)) and loaded from specific language files in the [`language map artifact/`](https://github.com/zgornel/ParSitter.jl_artifacts/blob/master/language_map/language_map.tar.gz). The contents of the artifact are located at `julia> artifact"parsitter-language-map"` and consits of single `.toml` files for each of the supported languages.
  - the snippet is parsed with tree-sitter to an XML AST.
  - the XML AST is parsed to an `EzXML` tree and converted to [`ParSitter.TreeQueryExpr`](@ref) where:
      - each node is a [`ParSitter.TreeQueryNode`](@ref) containing value and type. The types of query nodes will be node types supported by tree-sitter exclusively.
@@ -324,16 +324,7 @@ results[1][2]["symbol"]
 ```
 
 ## CLI-based parsing
-**ParSitter.jl** comes with an CLI tool that allows easy parsing of inline code, files and directories. Currently, it supports the following languages: [Python](https://www.python.org/), [Julia](https://julialang.org/), [C](https://en.wikipedia.org/wiki/C_(programming_language)), [C#](https://en.wikipedia.org/wiki/C_Sharp_(programming_language)) and [R](https://www.r-project.org/). This can be extended by adding more language files in [`languages/`](https://github.com/zgornel/ParSitter.jl/tree/master/languages).
-
-### Installing `tree-sitter` languages
-In order to be able to parse code, `tree-sitter` and plugins for specific languages need to be installed. For example, to install the python language parser and Assuming that we want to install it to a directory named `_parsers`, located in the current directory, the following sequence of commands should do it:
-```sh
-cd _parsers
-git clone https://github.com/tree-sitter/tree-sitter-python
-cd tree-sitter-python
-tree-sitter generate
-```
+**ParSitter.jl** comes with an CLI tool that allows easy parsing of inline code, files and directories. Currently, it supports the following languages: [Python](https://www.python.org/), [Julia](https://julialang.org/), [C](https://en.wikipedia.org/wiki/C_(programming_language)), [C#](https://en.wikipedia.org/wiki/C_Sharp_(programming_language)) and [R](https://www.r-project.org/).
 
 ### Running the CLI tool
 When ran, it returns a JSON string of the form:
