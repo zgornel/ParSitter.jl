@@ -79,7 +79,6 @@ function real_main()
     escape_chars = args["escape-chars"]
     print_code = args["print-code"]
     ###
-    ParSitter.check_tree_sitter()
     ParSitter.check_language(language, ParSitter.LANGUAGE_MAP)
 
     parsed = if input_type == "directory"

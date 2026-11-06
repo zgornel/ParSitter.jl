@@ -1,3 +1,7 @@
+v0.2.3
+------
+ - add tree-sitter artifacts
+
 v0.2.2
 ------
  - improved Python support
