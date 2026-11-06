@@ -27,19 +27,7 @@ or alternatively, using the `pkg` mode
 ] add ParSitter
 ```
 
-## Prerequisites
-
-ParSitter requires the tree-sitter CLI (≥ v0.25) and compiled parsers for the languages you want to use.
-Installation:
- - macOS: `brew install tree-sitter`
- - Linux: install `tree-sitter` using the distribution package manager or download binary from GitHub releases
- - Windows: `winget install tree-sitter` or download `tree-sitter.exe` from https://github.com/tree-sitter/tree-sitter/releases and add to `PATH`
-Then run
-```bash
-tree-sitter init-config
-```
-Edit `~/.config/tree-sitter/config.json` (or equivalent on Windows) and add parser directories. Build parsers with `tree-sitter generate` (see [languages/](https://github.com/zgornel/ParSitter.jl/tree/master/languages) TOML files for supported scopes).
-
+!!! compat "From version v0.2.3, ParSitter installs tree-sitter CLI (v0.26.13) and parsers for the supported languages through the julia artifacts mechanism. No separate tree-sitter installation is required.
 
 # Contents
 ```@contents
