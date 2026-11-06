@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - 'master'
+      - 'cc-development'
     tags:
       - '*'
   pull_request:
