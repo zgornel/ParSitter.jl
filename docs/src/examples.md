@@ -147,7 +147,7 @@ map(t->t[1:2], r)
 
 ### The `:speculative` match mode
 
-!!! compat "This feature is only available if v0.2.0"
+!!! compat "This feature is only available from v0.2.0"
 
 The `:speculative` matching mode is faster than `:nonstrict` because it stops after the first sub-tree match at each level during the recursive search. The result is that it will return a single value for each named capture even if more could be retrieved. Order of the query sub-trees does matter.
 ```@repl index
@@ -187,7 +187,7 @@ More examples of tree-matching behavior can be found in the [query tests](https:
 
 ### Query DSL
 
-!!! compat "This feature is only available if v0.2.0"
+!!! compat "This feature is only available from v0.2.0"
 
 A high-level DSL for writing queries as real code snippets with placeholders aimed and intuitive, language-native querying is available on top of the low-level S-Tuple based querying. It is based on the concept that querying code should be done with real code snippets. The locations or _placeholders_ where code is to be captured or ignored are marked with `{{}}`. Currently, the current query string placeholders are supported:
  - `{{capture_name::CAPTURE_TYPE}}` - named capture (extracts value into capture_name).
