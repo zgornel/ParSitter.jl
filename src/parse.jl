@@ -55,27 +55,50 @@ end
 
 Base.isfile(::Nothing) = false
 
-# Returns a tree-sitter command
-TREE_SITTER_LIBS = Dict(
-    "r" => artifact"tree-sitter-r",
-    "python" => artifact"tree-sitter-python",
-    "julia" => artifact"tree-sitter-julia",
-    "c" => artifact"tree-sitter-c",
-    "cs" => artifact"tree-sitter-c-sharp",
+"""
+Map from internal language names to tree-sitter language names. The prebuilt
+grammar library of a language is `<name>.<ext>` in the `tree-sitter-grammars`
+artifact and exports the `tree_sitter_<name>` function.
+"""
+const TREE_SITTER_LANGUAGE_NAMES = Dict(
+    "r" => "r",
+    "python" => "python",
+    "julia" => "julia",
+    "c" => "c",
+    "cs" => "c_sharp",
 )
 
-function _make_parse_file_cmd(file::String, language::String)
-    tree_sitter_bin_path = try
-        if Sys.iswindows()
-            joinpath(artifact"tree-sitter", "tree-sitter.exe")
-        else
-            joinpath(artifact"tree-sitter", "tree-sitter")
-        end
+_shared_lib_ext() = Sys.iswindows() ? "dll" : Sys.isapple() ? "dylib" : "so"
+
+# Artifact paths are resolved at call time, never at precompilation/sysimage build
+# time, so that relocated depots (e.g. PackageCompiler apps) find the artifacts.
+function _tree_sitter_bin_path()
+    return try
+        joinpath(artifact"tree-sitter", Sys.iswindows() ? "tree-sitter.exe" : "tree-sitter")
     catch e
-        @error("No tree-sitter binary artifact found. Supported are `linux`, `macos`, `windows` (x86_64/aarch64)")
+        error("No tree-sitter binary artifact found. Supported are `linux`, `macos`, `windows` (x86_64/aarch64)")
     end
-    tree_sitter_language_lib = TREE_SITTER_LIBS[language]
-    return pipeline(`$tree_sitter_bin_path parse -q -x -p $tree_sitter_language_lib $(file)`, stderr = devnull)
+end
+
+function _tree_sitter_lib_path(language::String)
+    name = TREE_SITTER_LANGUAGE_NAMES[language]
+    grammars = try
+        artifact"tree-sitter-grammars"
+    catch e
+        error("No tree-sitter grammars artifact found. Supported are `linux`, `macos`, `windows` (x86_64/aarch64)")
+    end
+    return joinpath(grammars, "$name.$(_shared_lib_ext())"), name
+end
+
+# Returns a tree-sitter command. Uses a prebuilt grammar library (`--lib-path`)
+# so that no C compiler is needed and no grammar is compiled at parse time.
+function _make_parse_file_cmd(file::String, language::String)
+    tree_sitter_bin_path = _tree_sitter_bin_path()
+    lib_path, lang_name = _tree_sitter_lib_path(language)
+    return pipeline(
+        `$tree_sitter_bin_path parse -q -x --lib-path $lib_path --lang-name $lang_name $(file)`,
+        stderr = devnull
+    )
 end
 
 

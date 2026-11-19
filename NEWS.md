@@ -1,3 +1,10 @@
+v0.2.5
+------
+ - ship prebuilt tree-sitter grammar libraries (`tree-sitter-grammars` artifact); no C compiler
+   is needed at runtime and grammars are no longer recompiled on every parse
+ - resolve artifact paths at runtime (fixes relocated depots, e.g. PackageCompiler apps)
+ - drop the grammar source artifacts
+
 v0.2.4
 ------
  - move language .toml files to artifacts
