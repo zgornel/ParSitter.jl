@@ -1,3 +1,7 @@
+v0.2.6
+------
+ - critical bugfixes
+
 v0.2.5
 ------
  - ship prebuilt tree-sitter grammar libraries (`tree-sitter-grammars` artifact); no C compiler
