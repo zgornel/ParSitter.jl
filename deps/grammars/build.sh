@@ -3,7 +3,8 @@
 # and binds the resulting `tree-sitter-grammars` artifacts in Artifacts.toml.
 #
 # Usage (from the ParSitter.jl root):
-#   docker run --rm -v "$PWD:/ParSitter" -w /ParSitter julia:1.12 bash deps/grammars/build.sh
+#   docker pull julia:1.13
+#   docker run --rm -v "$PWD:/ParSitter" -w /ParSitter julia:1.13 bash deps/grammars/build.sh
 #
 # Outputs: deps/grammars/out/tree-sitter-grammars-<triplet>.tar.gz
 # (upload them to ParSitter.jl_artifacts/grammars/) and an updated Artifacts.toml.

@@ -48,43 +48,43 @@ os = "windows"
 
 [[tree-sitter-grammars]]
 arch = "x86_64"
-git-tree-sha1 = "6d35009301635ea58e5e77820d46b7db20e6301e"
+git-tree-sha1 = "fbb447390a5c8a4680e0789a24283c81f378abbb"
 libc = "glibc"
 os = "linux"
 
     [[tree-sitter-grammars.download]]
-    sha256 = "377a3bf9c8380f23e3aa3d5e509f13e80aefca8ac048985dc8cae6b6c5c409e4"
+    sha256 = "f77772c49bd027b33d880c45fb796c1057ce7601026084fa6b47f0e67b173e32"
     url = "https://github.com/zgornel/ParSitter.jl_artifacts/raw/master/grammars/tree-sitter-grammars-x86_64-linux-gnu.tar.gz"
 [[tree-sitter-grammars]]
 arch = "aarch64"
-git-tree-sha1 = "1ef283da87ffdff39708911235f61d9e90672fe0"
+git-tree-sha1 = "dcb180aed3e3d21d10478be107fc59b1e384639b"
 libc = "glibc"
 os = "linux"
 
     [[tree-sitter-grammars.download]]
-    sha256 = "0cd82b912c3812c167fa3ecc3d281224f25d616853393d5065d1da6208b05a41"
+    sha256 = "574bdc053204dabed78d7242f53d95b1cf645a53b87296fd7167dde072343aad"
     url = "https://github.com/zgornel/ParSitter.jl_artifacts/raw/master/grammars/tree-sitter-grammars-aarch64-linux-gnu.tar.gz"
 [[tree-sitter-grammars]]
 arch = "x86_64"
-git-tree-sha1 = "554d30db86a194104cec29bbb2448a08addb5c2f"
+git-tree-sha1 = "2a7b342bcad9c537f934aa3a68966121b42c619e"
 os = "macos"
 
     [[tree-sitter-grammars.download]]
-    sha256 = "61b1daa26cce5913563392d5eca738d9bf2ae4135e890e02c17f18e79de3f7f0"
+    sha256 = "41f11dc3853e4d21f9f71efa8573d0542e0c64044fc6d1dc437a62358f006985"
     url = "https://github.com/zgornel/ParSitter.jl_artifacts/raw/master/grammars/tree-sitter-grammars-x86_64-apple-darwin.tar.gz"
 [[tree-sitter-grammars]]
 arch = "aarch64"
-git-tree-sha1 = "fcd56958b8aac557950299f3557d35b04ba9a7c2"
+git-tree-sha1 = "542cc83d2e952158506626b2feb3f9501fae941d"
 os = "macos"
 
     [[tree-sitter-grammars.download]]
-    sha256 = "7e80c2f562c46808eeebb6b84a6ae884d5b98c00aa869d0e7ec0f15e52f50ea7"
+    sha256 = "163736e1c470a8713c8c55ab14ac9f4590623e5560dd861e5d40bea32fb037bb"
     url = "https://github.com/zgornel/ParSitter.jl_artifacts/raw/master/grammars/tree-sitter-grammars-aarch64-apple-darwin.tar.gz"
 [[tree-sitter-grammars]]
 arch = "x86_64"
-git-tree-sha1 = "4d4151de26ee38dccf33104baee68877d9ca9e8f"
+git-tree-sha1 = "8237e22ca6fd0122b688fa1d43e8ee115670ea8d"
 os = "windows"
 
     [[tree-sitter-grammars.download]]
-    sha256 = "edaa3217744f50d967d2d4d0e1739126caaca67f4e9e0d64c97b7e9bae1ca130"
+    sha256 = "ad9aeb5eabb05c30906a8dec829271c3e99fb35e2bd17852fbe41b10ba93ab95"
     url = "https://github.com/zgornel/ParSitter.jl_artifacts/raw/master/grammars/tree-sitter-grammars-x86_64-w64-mingw32.tar.gz"
