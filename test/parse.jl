@@ -19,6 +19,7 @@ test_dir = abspath(dirname(@__FILE__))
                 @test p.file isa String
                 @test !isempty(p.file)
                 @test !isempty(p.parsed)
+                @test !p.has_errors
             end
         end
     end
@@ -35,7 +36,7 @@ test_dir = abspath(dirname(@__FILE__))
             language_dir = joinpath(test_dir, "code", language)
             file_path = joinpath(language_dir, FILE_MAP[language])
             # String
-            parsed = ParSitter._parse(
+            parsed, has_errors = ParSitter._parse(
                 read(file_path, String),
                 language,
                 escape_chars = false,
@@ -43,6 +44,7 @@ test_dir = abspath(dirname(@__FILE__))
             )
             @test parsed isa String         # parsing command executed and returned
             @test !isempty(parsed)          # contents were parsed
+            @test !has_errors
             # Code
             parsed = parse(
                 Code(read(file_path, String)),
@@ -51,8 +53,9 @@ test_dir = abspath(dirname(@__FILE__))
                 print_code = false
             )
             @test parsed isa ParseResult    # parsing command executed and returned
-            @test isnothing(parsed.file)    # contents were parsed
+            @test isnothing(parsed.file)    # no file
             @test !isempty(parsed.parsed)   # contents were parsed
+            @test !parsed.has_errors
         end
     end
 end

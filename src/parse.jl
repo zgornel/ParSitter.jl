@@ -37,6 +37,7 @@ end
     struct ParseResult
         file::Union{Nothing, String}
         parsed::String
+        has_errors::Bool
     end
 
 Parsing result object. It is returned from parsing `::Code` and `::File objects.`
@@ -44,6 +45,7 @@ Parsing result object. It is returned from parsing `::Code` and `::File objects.
 struct ParseResult
     file::Union{Nothing, String}
     parsed::String
+    has_errors::Bool
 end
 
 """
@@ -101,7 +103,6 @@ function _make_parse_file_cmd(file::String, language::String)
     )
 end
 
-
 _enable_escape_chars(code) = begin
     # "\n", "\t" in input code are treated as escape chars and not strings
     for ch in ["\\n" => '\n', "\\t" => '\t', "\\r" => '\r']
@@ -126,8 +127,13 @@ function _parse(code::String, language::String; escape_chars = false, print_code
         write(io, code)
         flush(io)
         ts_cmd = _make_parse_file_cmd(tmp_path, language)  # reuse the existing file parser
-        out = read(ts_cmd, String)
-        return replace(out, "\n" => "")
+        out, has_errors = try
+            read(ts_cmd, String), false
+        catch
+            @warn "Could not parse code"
+            "", true
+        end
+        return replace(out, "\n" => ""), has_errors
     end
 end
 
@@ -140,7 +146,7 @@ characters. If `print_code` is `true` it will print the code.
 
 """
 function Base.parse(code::Code, language::String; escape_chars = false, print_code = false)
-    return ParseResult(nothing, _parse(code.code, language; escape_chars, print_code))
+    return ParseResult(nothing, _parse(code.code, language; escape_chars, print_code)...)
 end
 
 """
@@ -154,13 +160,13 @@ function Base.parse(file::File, language::String)
     _file = abspath(file.name)
     @debug "Parsing file @ $_file ..."
     ts_cmd = _make_parse_file_cmd(_file, language)
-    out = try
-        read(ts_cmd, String)
+    out, has_errors = try
+        read(ts_cmd, String), false
     catch
         @warn "Could not parse $_file"
-        ""
+        "", true
     end
-    return ParseResult(_file, replace(out, "\n" => ""))
+    return ParseResult(_file, replace(out, "\n" => ""), has_errors)
 end
 
 """
