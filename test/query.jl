@@ -690,4 +690,40 @@ end
             end
         end
     end
+    @testset "case 7: failed match captures" begin
+        # target:
+        # "r"
+        #├─ "f"
+        #│  └─ "1"
+        #└─ "f"
+        #   └─ "2"
+        # query:
+        #"r"
+        #└─ "f@F"
+        #   └─ "2@G"
+        target = ParSitter.build_tq_tree(
+            ("r", ("f", "1"), ("f", "2"))
+        )
+        query = ParSitter.build_tq_tree(
+            ("r", ("f@F", "2@G"))
+        )
+        results = ParSitter.query(
+            target,
+            query;
+            match_type = :speculative,
+            target_tree_nodevalue = _target_tree_nodevalue,
+            query_tree_nodevalue = _query_tree_nodevalue,
+            capture_function = _capture_function,
+            node_comparison_yields_true = _capture_on_empty_query_value
+        )
+        @test sum(first, results) == 1  # match
+        expected_captures = [
+            MultiDict(["F" => "f", "G"=>"2"]),
+        ]
+        for (is_match, captures) in results
+            if is_match
+                @test captures in expected_captures
+            end
+        end
+    end
 end
