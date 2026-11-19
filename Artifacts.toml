@@ -1,8 +1,8 @@
 [parsitter-language-map]
-git-tree-sha1 = "dc7aac97954f51c04e2bb063ee64d565c1380486"
+git-tree-sha1 = "e331c93e0fde6db41858f4d275240116b8aefc2b"
 
     [[parsitter-language-map.download]]
-    sha256 = "58e93a7b05934786f192bfbb4f2160e83f8ecf0da53dc12c7b2505bcd7d5b507"
+    sha256 = "d6bb0c35f898ea1a64dd8b1baae2a4a21135f64edea919c9a0a449e46b01ee90"
     url = "https://github.com/zgornel/ParSitter.jl_artifacts/raw/master/language_map/language_map.tar.gz"
 
 [[tree-sitter]]
