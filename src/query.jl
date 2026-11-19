@@ -6,7 +6,7 @@ using AutoHashEquals
 
 _strip_spaces(text; maxlen = 80) = begin
     _txt = replace(text, r"[\s]+" => " ")
-    _txt[1:min(maxlen, length(_txt))]
+    return first(_txt, maxlen)
 end
 
 # merge! for 2 MultiDicts
@@ -51,7 +51,7 @@ AbstractTrees.nodevalue(t::EzXML.Node) = begin
         "-1:-1"
     end
     _content = if hasproperty(t, :content)
-        _strip_spaces(t.content) |> x -> ifelse(length(x) >= 20, x[1:min(length(x), 20)] * "...", x)
+        _strip_spaces(t.content) |> x -> ifelse(length(x) >= 20, first(x, 20) * "...", x)
     else
         ""
     end
@@ -128,9 +128,11 @@ end
 """
 Convert a `generic_node::T` to a `TreeQueryExpr`. Equivalent to `TreeQueryExpr(nodevalue(x), TreeQueryExpr[])
 """
-Base.convert(::Type{ParSitter.TreeQueryExpr},
-             generic_node::T;
-             nodevalue=AbstractTrees.nodevalue) where T =
+Base.convert(
+    ::Type{ParSitter.TreeQueryExpr},
+    generic_node::T;
+    nodevalue = AbstractTrees.nodevalue
+) where {T} =
     ParSitter.TreeQueryExpr(nodevalue(generic_node), ParSitter.TreeQueryExpr[])
 
 """
@@ -460,7 +462,7 @@ function match_tree(
                     for (_found, _capture) in zip(found_vector, capture_vector)
                         if _found
                             merge!(captured_symbols, _capture)  # merge captures only if whole subtree matched
-                         end
+                        end
                     end
                     push!(subtrees_found, true)
                     break

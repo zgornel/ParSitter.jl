@@ -154,7 +154,7 @@ _capture_on_empty_query_value(tt, qt) =
             ("r", ("f", "1"), ("f", "2", "3"), ("f", "1", "5"))
         )
         query = ParSitter.build_tq_tree(
-            ("r", ("f", "2","3"))
+            ("r", ("f", "2", "3"))
         )
         results = ParSitter.query(
             target,
@@ -718,7 +718,7 @@ end
         )
         @test sum(first, results) == 1  # match
         expected_captures = [
-            MultiDict(["F" => "f", "G"=>"2"]),
+            MultiDict(["F" => "f", "G" => "2"]),
         ]
         for (is_match, captures) in results
             if is_match
