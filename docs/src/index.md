@@ -27,7 +27,7 @@ or alternatively, using the `pkg` mode
 ] add ParSitter
 ```
 
-!!! compat "ParSitter installs tree-sitter CLI (v0.26.13), parsers for the supported languages and its specific mappings for querying through the julia artifacts mechanism. No separate tree-sitter installation is required. This feature is available from v0.2.3"
+!!! compat "ParSitter installs tree-sitter CLI (v0.26.13), prebuilt parsers for the supported languages (no C compiler required, from v0.2.5) and its specific mappings for querying through the julia artifacts mechanism. No separate tree-sitter installation is required. This feature is available from v0.2.3"
 
 # Contents
 ```@contents

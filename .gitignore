@@ -3,3 +3,4 @@ _*/
 tmp/*
 docs/build/
 Manifest.toml
+deps/grammars/out/
