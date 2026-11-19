@@ -355,7 +355,7 @@ function match_tree(
             # are matched against the query tree; if any of them matches, the function returns
             subtrees_found = Bool[]
             _match_cache = Dict()
-            for c1_permutation in keep_sorted_permutations(c1, collect(Combinatorics.multiset_permutations(c1, length(c2))))
+            for c1_permutation in keep_sorted_permutations(c1, collect(Combinatorics.combinations(c1, length(c2))))
                 _captured_symbols = MultiDict()
                 subtree_results = [
                     match_tree(

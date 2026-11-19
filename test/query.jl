@@ -134,6 +134,40 @@ _capture_on_empty_query_value(tt, qt) =
             end
         end
     end
+    @testset "case 6" begin
+        # target:
+        # "r"
+        #├─ "f"
+        #│  └─ "1"
+        #├─ "f"
+        #│  ├─ "2"
+        #│  └─ "3"
+        #└─ "f"
+        #   ├─ "1"
+        #   └─ "5"
+        # query:
+        # "r"
+        #├─ "f"
+        #│  ├─ "2"
+        #│  └─ "3"
+        target = ParSitter.build_tq_tree(
+            ("r", ("f", "1"), ("f", "2", "3"), ("f", "1", "5"))
+        )
+        query = ParSitter.build_tq_tree(
+            ("r", ("f", "2","3"))
+        )
+        results = ParSitter.query(
+            target,
+            query;
+            match_type = :strict,
+            target_tree_nodevalue = _target_tree_nodevalue,
+            query_tree_nodevalue = _query_tree_nodevalue,
+            capture_function = _capture_function,
+            node_comparison_yields_true = _capture_on_empty_query_value
+        )
+        @test sum(first, results) == 1  # one match
+        @test sum(p -> !isempty(p[2]), results) == 0  # no captures
+    end
 end
 
 
