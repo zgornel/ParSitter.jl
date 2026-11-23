@@ -165,9 +165,9 @@ Base.convert(
     _destructure(t) = ifelse(length(t) == 1, first(t), t)
     c = children(t)
     if length(c) > 1
-        return (nodevalue(t), [_destructure(Base.convert(Tuple, ci)) for ci in c]...)
+        return (nodevalue(t), [_destructure(Base.convert(Tuple, ci; nodevalue, children)) for ci in c]...)
     elseif length(c) == 1
-        return (nodevalue(t), Base.convert(Tuple, only(c)))
+        return (nodevalue(t), Base.convert(Tuple, only(c); nodevalue, children))
     else # length(c) == 0
         return (nodevalue(t),)
     end
@@ -294,8 +294,8 @@ is captured by applying `capture_function` to the node and stored as
 `MultiDict("capture_variable"=>captured_target_node_value))`.
 
 The `match_type` argument, for
- • `:strict` values will require trees to have the same order and number of leafs/sub-trees
- as the query tree.
+ • `:strict` values will require trees to have the same order and at least the same number
+ of leafs/sub-trees as the query tree.
  • `:nonstrict` matching allows for additional leaves and sub-trees of the target tree; when
  matching, all permutations possible of query tree length will be used to match the query.
  • `:speculative` matching will stops after the first match for each sub-tree/leaf.
