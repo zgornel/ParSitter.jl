@@ -472,7 +472,8 @@ function match_tree(
             end
             found &= any(subtrees_found)
         else
-            @error "Unknown match type. Use :strict, :nonstrict and :speculative"
+            @warn "Unknown match type. Supported: ':strict', ':nonstrict', ':speculative'"
+            return false, captured_symbols, target_tree
         end
         push!(match_cache, _hash => (found, captured_symbols))
         return found, captured_symbols, target_tree
