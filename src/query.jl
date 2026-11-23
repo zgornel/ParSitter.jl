@@ -180,8 +180,15 @@ Base.convert(::Type{Tuple}, t::S) where {S <: Tuple} = t  # Fix from Aqua.jl
 Checks that a query tree does not contain duplicate capture keys.
 """
 function check_tq_tree(tree::TreeQueryExpr)
-    captures = [n for n in PreOrderDFS(tree) if ParSitter.is_capture_node(n).is_match]
-    return @assert length(captures) == length(unique(captures)) "Found non-unique capture keys in query"
+    captures = [
+        ParSitter.is_capture_node(n).capture_key for n in PreOrderDFS(tree)
+            if ParSitter.is_capture_node(n).is_match
+    ]
+    unique_captures = unique(captures)
+    if length(captures) != length(unique_captures)
+        throw(ErrorException("Found non-unique capture keys in query"))
+    end
+    return nothing
 end
 
 check_tq_tree(::Nothing) = throw(ErrorException("Query tree is nothing, probably query generation failed."))
