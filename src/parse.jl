@@ -58,17 +58,11 @@ end
 Base.isfile(::Nothing) = false
 
 """
-Map from internal language names to tree-sitter language names. The prebuilt
-grammar library of a language is `<name>.<ext>` in the `tree-sitter-grammars`
-artifact and exports the `tree_sitter_<name>` function.
+Get a list of language names, as defined in the `parsitter_name` field of the
+`<language>.toml` ParSitter language map file. It represents the name of the
+language in ParSitter.
 """
-const TREE_SITTER_LANGUAGE_NAMES = Dict(
-    "r" => "r",
-    "python" => "python",
-    "julia" => "julia",
-    "c" => "c",
-    "cs" => "c_sharp",
-)
+_tree_sitter_language_names() = collect(keys(LANGUAGE_MAP))
 
 _shared_lib_ext() = Sys.iswindows() ? "dll" : Sys.isapple() ? "dylib" : "so"
 
@@ -83,13 +77,14 @@ function _tree_sitter_bin_path()
 end
 
 function _tree_sitter_lib_path(language::String)
-    name = TREE_SITTER_LANGUAGE_NAMES[language]
+    supported_languages = _tree_sitter_language_names()
+    @assert language in supported_languages "Language `$language` not supported; Supported: $supported_languages"
     grammars = try
         artifact"tree-sitter-grammars"
     catch e
         error("No tree-sitter grammars artifact found. Supported are `linux`, `macos`, `windows` (x86_64/aarch64)")
     end
-    return joinpath(grammars, "$name.$(_shared_lib_ext())"), name
+    return joinpath(grammars, "$language.$(_shared_lib_ext())"), language
 end
 
 # Returns a tree-sitter command. Uses a prebuilt grammar library (`--lib-path`)

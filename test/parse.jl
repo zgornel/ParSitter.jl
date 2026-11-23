@@ -29,7 +29,7 @@ test_dir = abspath(dirname(@__FILE__))
             "python" => joinpath("test_project", "main.py"),
             "julia" => joinpath("test_project", "src", "cf1.jl"),
             "c" => joinpath("test_pass_value_lib", "test_pass_value.c"),
-            "cs" => "hello_world.cs",
+            "c_sharp" => "hello_world.cs",
             "r" => "r_snippet_lm.r"
         )
         for language in keys(LANGUAGE_MAP)
