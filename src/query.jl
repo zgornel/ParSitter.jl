@@ -297,6 +297,10 @@ function match_tree(
         node_comparison_yields_true = (args...) -> false,
         node_equality_function = Base.isequal
     )
+    # Checks
+    if match_type ∉ [:strict, :nonstrict, :speculative]
+        throw(ArgumentError("Unknown match type. Supported: ':strict', ':nonstrict', ':speculative'"))
+    end
 
     # Initializations
     c1 = children(target_tree)
@@ -457,7 +461,6 @@ function match_tree(
             end
             found &= any(subtrees_found)
         else
-            @warn "Unknown match type. Supported: ':strict', ':nonstrict', ':speculative'"
             return false, captured_symbols, target_tree
         end
         push!(match_cache, _hash => (found, captured_symbols))
@@ -487,7 +490,11 @@ function query(
         node_equality_function = Base.isequal
     )
     # Checks
+    if match_type ∉ [:strict, :nonstrict, :speculative]
+        throw(ArgumentError("Unknown match type. Supported: ':strict', ':nonstrict', ':speculative'"))
+    end
     check_tq_tree(query_tree)
+    # Traverse & match
     matches = []
     for tn in PreOrderDFS(target_tree)
         m = match_tree(
