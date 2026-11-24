@@ -246,28 +246,6 @@ is_capture_node(n::TreeQueryExpr{TreeQueryNode}; capture_sym = DEFAULT_CAPTURE_S
 is_capture_node(n; capture_sym = DEFAULT_CAPTURE_SYM) = (is_match = false, capture_key = "")
 
 """
-Function that returns the permutations of v in which the elements appear
-in an order consistent with the index in v.
-```
-julia> v = [1, 5, -1]
-       p = Combinatorics.multiset_permutations(v, 2) |> collect
-       keep_sorted_permutations(v, p)
-3-element Vector{Vector{Int64}}:
- [1, 5]
- [1, -1]
- [5, -1]
-```
-"""
-function keep_sorted_permutations(v, permutations)
-    good = falses(length(permutations))
-    for (i, permutation) in enumerate(permutations)
-        indexes = indexin(permutation, v)
-        good[i] = issorted(indexes)
-    end
-    return permutations[good]
-end
-
-"""
     function match_tree(target_tree,
                         query_tree;
                         match_cache=Dict(),
@@ -364,7 +342,7 @@ function match_tree(
             # are matched against the query tree; if any of them matches, the function returns
             subtrees_found = Bool[]
             _match_cache = Dict()
-            for c1_permutation in keep_sorted_permutations(c1, collect(Combinatorics.combinations(c1, length(c2))))
+            for c1_permutation in collect(Combinatorics.combinations(c1, length(c2)))
                 _captured_symbols = MultiDict()
                 subtree_results = [
                     match_tree(
