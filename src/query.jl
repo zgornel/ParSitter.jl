@@ -338,12 +338,11 @@ function match_tree(
             subtrees_found = Bool[]
             _match_cache = Dict()
             for c1_permutation in collect(Combinatorics.combinations(c1, length(c2)))
-                _captured_symbols = MultiDict()
                 subtree_results = [
                     match_tree(
                             t, q;
                             match_cache = _match_cache,
-                            captured_symbols = _captured_symbols,
+                            captured_symbols = MultiDict(),
                             match_type = :strict,
                             is_capture_node,
                             target_tree_nodevalue,
@@ -373,12 +372,11 @@ function match_tree(
             subtrees_found = Bool[]
             _match_cache = Dict()
             for c1_permutation in unique(permutations(c1, length(c2)))
-                _captured_symbols = MultiDict()
                 subtree_results = [
                     match_tree(
                             t, q;
                             match_cache = _match_cache,
-                            captured_symbols = _captured_symbols,
+                            captured_symbols = MultiDict(),
                             match_type = :nonstrict,
                             is_capture_node,
                             target_tree_nodevalue,
