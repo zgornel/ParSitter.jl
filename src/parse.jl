@@ -190,7 +190,7 @@ end
 """
     print_code_tree(code::String, language::String; maxdepth=100)
 
-Prints the AST of a gieven piece of `code` written in a given
+Prints the AST of a given piece of `code` written in a given
 programming `language`.
 """
 print_code_tree(code::String, language::String; maxdepth = 100) = begin

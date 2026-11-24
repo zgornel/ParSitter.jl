@@ -64,7 +64,7 @@ AbstractTrees.prevsibling(t::EzXML.Node) = EzXML.prevelement(t)
 
 # AbstractTrees interface for Tuple-based S-expressions (query trees)
 """
-	TreeQueryNode(value::String, type:String)
+	TreeQueryNode(value::String, type:Union{Nothing, String})
 
 Structure used for holding values and types for query nodes
 generated from tree-sitter parsed code.
@@ -194,13 +194,13 @@ end
 check_tq_tree(::Nothing) = throw(ErrorException("Query tree is nothing, probably query generation failed."))
 
 """
-    build_xml_tree(tree_sitter_xml_ast::String)
+    build_xml_tree(xmlstring::String)
 
 Builds an XML tree out of the XML output from tree-sitter.
 Internally, calls `EzXML.parsexml`.
 """
-function build_xml_tree(tree_sitter_xml_ast::String)
-    tmp = replace(tree_sitter_xml_ast, "\n" => "")
+function build_xml_tree(xmlstring::String)
+    tmp = replace(xmlstring, "\n" => "")
     return EzXML.parsexml(tmp)
 end
 
@@ -437,7 +437,7 @@ function match_tree(
             _match_cache = Dict()
             subtrees_found = Bool[]
             lenc2 = length(c2)
-            # seach over all query nodes permutations
+            # search over all query nodes permutations
             for c2_permutation in unique(permutations(c2))
                 capture_vector = MultiDict[]        # accumulates captures
                 found_vector = Bool[]
@@ -549,7 +549,7 @@ get_capture(qr::Tuple, key) = begin
     values = get(captures, key, nothing)
     values == nothing && return nothing
     if values isa Vector && length(values) > 1
-        throw(ErrorException("Ambigous capture, more than 1 match for key \"$key\""))
+        throw(ErrorException("Ambiguous capture, more than 1 match for key \"$key\""))
     end
     return first(value for value in values)
 end

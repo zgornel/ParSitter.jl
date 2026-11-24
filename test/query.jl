@@ -14,7 +14,7 @@ _capture_on_empty_query_value(tt, qt) =
 ) ||
     _query_tree_nodevalue(qt) == "*"
 
-@testset "match_type==:strict quering" begin
+@testset "match_type==:strict querying" begin
     @testset "case 1" begin
         target = ParSitter.build_tq_tree(
             (1, 2)
@@ -171,7 +171,7 @@ _capture_on_empty_query_value(tt, qt) =
 end
 
 
-@testset "match_type==:nonstrict quering" begin
+@testset "match_type==:nonstrict querying" begin
     @testset "case 1" begin
         # target:
         # 1
@@ -434,7 +434,7 @@ end
 end
 
 
-@testset "match_type==:speculative quering" begin
+@testset "match_type==:speculative querying" begin
     @testset "case 1" begin
         # target:
         # 1

@@ -12,7 +12,6 @@ using Reexport
 
 # Init function: initializes languages
 function __init__()
-    # Intialize
     language_directory = joinpath(artifact"parsitter-language-map", "languages")
     return populate!(
         LANGUAGE_MAP,

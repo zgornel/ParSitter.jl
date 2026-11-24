@@ -11,13 +11,13 @@ function get_arguments(args::Vector{String})
     s = ArgParseSettings()
     @add_arg_table! s begin
         "input"
-        help = "entitity to parse (directory, file or snippet of code)"
+        help = "entity to parse (directory, file or snippet of code)"
         arg_type = String
         "--input-type"
         help = "What is being parsed. Available 'file', 'directory', 'code'"
         arg_type = String
         "--language"
-        help = "Programming language. Available: 'python', 'julia', 'c', 'c#', 'r'"
+        help = "Programming language. Available: 'python', 'julia', 'c', 'c_sharp', 'r'"
         arg_type = String
         "--print-code"
         help = "Whether to print out the code that is parsed"
@@ -82,7 +82,7 @@ function real_main()
     ParSitter.check_language(language, ParSitter.LANGUAGE_MAP)
 
     parsed = if input_type == "directory"
-        # iterate rcursively through directory and parse all files
+        # iterate recursively through directory and parse all files
         ParSitter.parse(ParSitter.Directory(input), language)
     elseif input_type == "file"
         # parse a single file
