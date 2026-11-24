@@ -126,17 +126,7 @@ build_tq_tree(t::Tuple) = begin
 end
 
 """
-Convert a `generic_node::T` to a `TreeQueryExpr`. Equivalent to `TreeQueryExpr(nodevalue(x), TreeQueryExpr[])
-"""
-Base.convert(
-    ::Type{ParSitter.TreeQueryExpr},
-    generic_node::T;
-    nodevalue = AbstractTrees.nodevalue
-) where {T} =
-    ParSitter.TreeQueryExpr(nodevalue(generic_node), ParSitter.TreeQueryExpr[])
-
-"""
-Convert a tree `t::Tuple` to a `TreeQueryExpr`. The node value is returned
+Convert a generic tree structure `t::S` to a `TreeQueryExpr`. The node value is returned
 by `nodevalue` and children of the node returned by `children`.
 """
 Base.convert(
@@ -144,7 +134,7 @@ Base.convert(
     t::S;
     nodevalue = AbstractTrees.nodevalue,
     children = AbstractTrees.children
-) where {S <: Tuple} = begin
+) where {S} = begin
     c = children(t)
     if length(c) > 0
         return TreeQueryExpr(nodevalue(t), TreeQueryExpr[Base.convert(TreeQueryExpr, ci; nodevalue) for ci in c])
@@ -179,10 +169,11 @@ Base.convert(::Type{Tuple}, t::S) where {S <: Tuple} = t  # Fix from Aqua.jl
 """
 Checks that a query tree does not contain duplicate capture keys.
 """
-function check_tq_tree(tree::TreeQueryExpr)
+function check_tq_tree(tree::TreeQueryExpr; is_capture_node=is_capture_node)
+    # use `is_capture_node = n->is_capture_node(n, capture_sym="ϵ")` to support custom capture-symbols
     captures = [
-        ParSitter.is_capture_node(n).capture_key for n in PreOrderDFS(tree)
-            if ParSitter.is_capture_node(n).is_match
+        is_capture_node(n).capture_key for n in PreOrderDFS(tree)
+            if is_capture_node(n).is_match
     ]
     unique_captures = unique(captures)
     if length(captures) != length(unique_captures)
