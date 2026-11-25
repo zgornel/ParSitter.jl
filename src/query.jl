@@ -106,15 +106,6 @@ head of the expression, the rest are children.
 """
 build_tq_tree(v::T) where {T} = TreeQueryExpr(v, TreeQueryExpr[])
 build_tq_tree(t::TreeQueryExpr) = t
-build_tq_tree(t::NTuple{N, T}) where {N, T} = begin
-    if length(t) == 1
-        return TreeQueryExpr{T}(t[1], TreeQueryExpr{T}[])
-    elseif length(t) > 1
-        return TreeQueryExpr{T}(t[1], TreeQueryExpr{T}[build_tq_tree(ti) for ti in t[2:end]])
-    else
-        @error "Input tuple is empty."
-    end
-end
 build_tq_tree(t::Tuple) = begin
     if length(t) == 1
         return TreeQueryExpr(t[1], TreeQueryExpr[])

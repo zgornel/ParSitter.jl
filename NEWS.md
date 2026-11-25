@@ -1,3 +1,8 @@
+v0.2.8
+------
+ - remove parsitter.jl CLI
+ - bugfixes
+
 v0.2.7
 ------
  - remove legacy language mappings in code

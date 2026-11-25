@@ -322,33 +322,3 @@ filter!(first, results)
 results[1][2]["library"]
 results[1][2]["symbol"]
 ```
-
-## CLI-based parsing
-**ParSitter.jl** comes with an CLI tool that allows easy parsing of inline code, files and directories. Currently, it supports the following languages: [Python](https://www.python.org/), [Julia](https://julialang.org/), [C](https://en.wikipedia.org/wiki/C_(programming_language)), [C#](https://en.wikipedia.org/wiki/C_Sharp_(programming_language)) and [R](https://www.r-project.org/).
-
-### Running the CLI tool
-When ran, it returns a JSON string of the form:
-```
-{ "path/to/file":"parsed code in XML format",
-  ...
-}
-```
-For directories the JSON will contain more key-value pairs and for inline code the file path key is an empty string. For example, the following command
-```sh
-julia --project parsitter.jl ./test/code/python/test_project/main.py --input-type file --language python --log-level error
-```
-will result in
-```
-{".../ParSitter.jl/test/code/python/test_project/main.py":"<?xml version=\"1.0\"?><module srow=\"0\" scol=\"0\" erow=\"15\" ecol=\"0\">  <import_from_sta...
-}
-```
- > Note the `--escape-chars` option should be used if parsing inline code with `\n`, '\t' or '\r' characters.
-
-For example the following works,
-```sh
-$ julia parsitter.jl 'def foo():pass' --input-type code --language python --log-level debug
-```
-however if escape chars are present, use the `--escape-chars` option:
-```sh
-$ julia parsitter.jl 'def foo():\n\tpass' --input-type code --escape-chars --language python --log-level debug
-```
