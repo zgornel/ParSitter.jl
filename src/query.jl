@@ -169,7 +169,7 @@ Base.convert(::Type{Tuple}, t::S) where {S <: Tuple} = t  # Fix from Aqua.jl
 """
 Checks that a query tree does not contain duplicate capture keys.
 """
-function check_tq_tree(tree::TreeQueryExpr; is_capture_node=is_capture_node)
+function check_tq_tree(tree::TreeQueryExpr; is_capture_node = is_capture_node)
     # use `is_capture_node = n->is_capture_node(n, capture_sym="ϵ")` to support custom capture-symbols
     captures = [
         is_capture_node(n).capture_key for n in PreOrderDFS(tree)
@@ -332,18 +332,21 @@ function match_tree(
                 found && push!(captured_symbols, capture_key => capture_function(target_tree))
             end
         end
-        if match_type == :strict
-            # permutations with strict target tree order of sub-trees of the target tree
-            # are matched against the query tree; if any of them matches, the function returns
+        if match_type ∈ (:strict, :nonstrict)
             subtrees_found = Bool[]
             _match_cache = Dict()
-            for c1_permutation in collect(Combinatorics.combinations(c1, length(c2)))
+            c1_candidate_idxs = ifelse(
+                match_type == :strict,
+                unique(combinations(1:length(c1), length(c2))),  # :strict branch (uses strict order of target subtrees)
+                unique(permutations(1:length(c1), length(c2)))   # :nonstrict branch (no order of target subtrees)
+            )
+            for idxs in c1_candidate_idxs
                 subtree_results = [
                     match_tree(
                             t, q;
                             match_cache = _match_cache,
                             captured_symbols = MultiDict(),
-                            match_type = :strict,
+                            match_type,
                             is_capture_node,
                             target_tree_nodevalue,
                             query_tree_nodevalue,
@@ -351,41 +354,7 @@ function match_tree(
                             node_comparison_yields_true,
                             node_equality_function
                         )
-                        for (t, q) in zip(c1_permutation, c2)
-                ]
-                # All sub-trees of a specific permutation must match
-                _found = all(first, subtree_results)
-                if _found
-                    for (_, subtree_captures, _) in subtree_results
-                        merge!(captured_symbols, subtree_captures)  # add matched symbols
-                    end
-                end
-                push!(subtrees_found, _found)  # store whether sub-tree permutation was found
-            end
-            # Resolve matching:
-            # - any of the matched sub-trees (from permutations will do)
-            # - logical AND is used to transmit finding recursively upwards
-            found &= any(subtrees_found)
-        elseif match_type == :nonstrict
-            # unordered permutations of sub-trees of the target tree are matched against
-            # the query tree; if any of them matches, the function returns
-            subtrees_found = Bool[]
-            _match_cache = Dict()
-            for c1_permutation in unique(permutations(c1, length(c2)))
-                subtree_results = [
-                    match_tree(
-                            t, q;
-                            match_cache = _match_cache,
-                            captured_symbols = MultiDict(),
-                            match_type = :nonstrict,
-                            is_capture_node,
-                            target_tree_nodevalue,
-                            query_tree_nodevalue,
-                            capture_function,
-                            node_comparison_yields_true,
-                            node_equality_function
-                        )
-                        for (t, q) in zip(c1_permutation, c2)
+                        for (t, q) in zip(c1[idxs], c2)
                 ]
                 # All sub-trees of a specific permutation must match
                 _found = all(first, subtree_results)
@@ -409,7 +378,8 @@ function match_tree(
             subtrees_found = Bool[]
             lenc2 = length(c2)
             # search over all query nodes permutations
-            for c2_permutation in unique(permutations(c2))
+            for idxs in unique(permutations(1:length(c2)))
+                c2_permutation = c2[idxs]
                 capture_vector = MultiDict[]        # accumulates captures
                 found_vector = Bool[]
                 qidx = 1

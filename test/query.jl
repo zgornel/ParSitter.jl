@@ -170,7 +170,7 @@ _capture_on_empty_query_value(tt, qt) =
     end
     @testset "case 7" begin
         target = ParSitter.build_tq_tree(
-            ("r","a","b","a")
+            ("r", "a", "b", "a")
         )
         query = ParSitter.build_tq_tree(
             ("r", "b", "a")
@@ -196,10 +196,10 @@ _capture_on_empty_query_value(tt, qt) =
         # ├─ "f1"
         # └─ "@F"
         target = ParSitter.build_tq_tree(
-            ("r","a", "b", "x", ("f1","1"), "x2", ("f2","2"))
+            ("r", "a", "b", "x", ("f1", "1"), "x2", ("f2", "2"))
         )
         query = ParSitter.build_tq_tree(
-            ("r", "@X", "f1","@F")
+            ("r", "@X", "f1", "@F")
         )
         results = ParSitter.query(
             target,
