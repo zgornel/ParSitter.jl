@@ -9,8 +9,8 @@ _strip_spaces(text; maxlen = 80) = begin
     return first(_txt, maxlen)
 end
 
-# merge! for 2 MultiDicts
-Base.merge!(md1::MultiDict{K, V}, md2::MultiDict{K, V}) where {K, V} = begin
+# Merges two MultiDicts
+_merge_captures!(md1::MultiDict{K, V}, md2::MultiDict{K, V}) where {K, V} = begin
     for (k, v2) in md2
         v1 = get(md1, k, V[])
         if !haskey(md1, k)
@@ -106,7 +106,7 @@ head of the expression, the rest are children.
 """
 build_tq_tree(v::T) where {T} = TreeQueryExpr(v, TreeQueryExpr[])
 build_tq_tree(t::TreeQueryExpr) = t
-build_tq_tree(t::NTuple{N, T}) where {N <: Int, T <: Any} = begin
+build_tq_tree(t::NTuple{N, T}) where {N, T} = begin
     if length(t) == 1
         return TreeQueryExpr{T}(t[1], TreeQueryExpr{T}[])
     elseif length(t) > 1
@@ -360,7 +360,7 @@ function match_tree(
                 _found = all(first, subtree_results)
                 if _found
                     for (_, subtree_captures, _) in subtree_results
-                        merge!(captured_symbols, subtree_captures)  # add matched symbols
+                        _merge_captures!(captured_symbols, subtree_captures)  # add matched symbols
                     end
                 end
                 push!(subtrees_found, _found)  # store whether sub-tree permutation was found
@@ -409,7 +409,7 @@ function match_tree(
                 if qidx > lenc2
                     for (_found, _capture) in zip(found_vector, capture_vector)
                         if _found
-                            merge!(captured_symbols, _capture)  # merge captures only if whole subtree matched
+                            _merge_captures!(captured_symbols, _capture)  # merge captures only if whole subtree matched
                         end
                     end
                     push!(subtrees_found, true)

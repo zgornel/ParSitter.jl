@@ -55,8 +55,6 @@ function check_language(language, lang_map)
     return @assert language in keys(lang_map) "Unrecognized language $language, exiting..."
 end
 
-Base.isfile(::Nothing) = false
-
 """
 Get a list of language names, as defined in the `parsitter_name` field of the
 `<language>.toml` ParSitter language map file. It represents the name of the
