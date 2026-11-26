@@ -1,5 +1,7 @@
 using Pkg.Artifacts
 
+public Directory, File, Code, ParseResult
+
 """
     struct Directory
         name::String
@@ -70,7 +72,7 @@ function _tree_sitter_bin_path()
     return try
         joinpath(artifact"tree-sitter", Sys.iswindows() ? "tree-sitter.exe" : "tree-sitter")
     catch e
-        error("No tree-sitter binary artifact found. Supported are `linux`, `macos`, `windows` (x86_64/aarch64)")
+        error("No tree-sitter binary artifact found. Supported are `linux`, `macos` (x86_64/aarch64), `windows` (x86_64)")
     end
 end
 
@@ -80,7 +82,7 @@ function _tree_sitter_lib_path(language::String)
     grammars = try
         artifact"tree-sitter-grammars"
     catch e
-        error("No tree-sitter grammars artifact found. Supported are `linux`, `macos`, `windows` (x86_64/aarch64)")
+        error("No tree-sitter grammars artifact found. Supported are `linux`, `macos` (x86_64/aarch64), `windows` (x86_64)")
     end
     return joinpath(grammars, "$language.$(_shared_lib_ext())"), language
 end

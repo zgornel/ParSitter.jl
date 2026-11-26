@@ -297,7 +297,7 @@ function match_tree(
         node_comparison_yields_true(target_tree, query_tree)
 
     # Check hashes, return if found
-    _hash = hash((target_tree, query_tree))
+    _hash = hash((objectid(target_tree), objectid(query_tree), match_type))
     if _hash in keys(match_cache)
         return match_cache[_hash]..., target_tree
     end
