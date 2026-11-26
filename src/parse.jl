@@ -1,6 +1,6 @@
 using Pkg.Artifacts
 
-public Directory, File, Code, ParseResult
+public Directory, File, Code, ParseResult, parse
 
 """
     struct Directory
