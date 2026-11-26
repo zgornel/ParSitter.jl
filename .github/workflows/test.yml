@@ -20,15 +20,18 @@ jobs:
         exclude:
           - os: windows-latest
             julia-arch: aarch64
+          - os: ubuntu-latest
+            julia-arch: aarch64
+          - os: macos-latest
+            julia-arch: x64
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set up Julia
-        uses: julia-actions/setup-julia@v3
+        uses: julia-actions/setup-julia@v2
         with:
           version: ${{ matrix.julia-version }}
           arch: ${{ matrix.julia-arch }}
-          force-arch: 'false'
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
