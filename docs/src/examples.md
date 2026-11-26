@@ -25,24 +25,34 @@ With the help of the functions, the matching function becomes generic as it beco
 
 ### Query trees
 
-The library defines a single structure for working with query trees, a **tree-query-expression**, through [`ParSitter.TreeQueryExpr`](@ref) object. It is a simple object whose purpose is to adhere to the `AbstractTrees.jl` interface. Query trees can be constructed from `Tuples` or `NTuples`
+The library defines a single structure for working with query trees, a **tree-query-expression**, through [`ParSitter.TreeQueryExpr`](@ref) object. It is a simple object whose purpose is to adhere to the `AbstractTrees.jl` interface. The recommended way to obtain query trees from `::Tuple`s is with the `build_tq_tree`
 ```@repl index
 using ParSitter, AbstractTrees
 tt = (1,2,(3,(4,5,(6,),7,5)));
 tq = ParSitter.build_tq_tree(tt)
 print_tree(tq)
 ```
-and converted back to `Tuples` and `NTuples`:
+Query trees can be converted back to `::Tuple`s:
 ```@repl index
 tt = convert(Tuple, tq)
 ```
-The basic operating principle is that in the tuple, the first value is the root of the tree and the rest are leafs. When nesting tuples, the first value of an enclosed tuple is the root and the rest become leafs.
+The function `build_tq_tree` uses S-Expression semantics, where the first tuple value is the tree root and the rest are leafs. When nesting tuples, the first value of an enclosed tuple is the root of the sub-tree and the rest become leafs.
 ```@repl index
 tt = ("root", "L1_leaf1", "L1_leaf2", ("L2_root", "L2_leaf2"))
 tq = ParSitter.build_tq_tree(tt)
 print_tree(tq)
 ```
-
+Query trees can be obtained through the `convert` method which uses `AbstractTrees.jl` semantics, where the whole tuple is the node value.
+So,
+```@repl index
+t = convert(Tuple, convert(TreeQueryExpr, (1,2,3)))  # gives `((1,2,3),1,2,3)`
+print_tree(t)
+```
+differs from
+```
+t = convert(Tuple, build_tq_tree((1,2,3)))  # gives `(1,2,3)`
+print_tree(t)
+```
 ### Code trees
 
 Code is represented as `EzXML.Node` objects. Therefore code querying will resort to matching `::TreeQueryExpr`-based trees with `::EzXML.Node`-based trees.

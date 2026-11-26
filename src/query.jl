@@ -112,7 +112,7 @@ build_tq_tree(t::Tuple) = begin
     elseif length(t) > 1
         return TreeQueryExpr(t[1], TreeQueryExpr[build_tq_tree(ti) for ti in t[2:end]])
     else
-        @error "Input tuple is empty."
+        throw(ArgumentError("Input tuple is empty"))
     end
 end
 
@@ -195,7 +195,7 @@ build_xml_tree(parse_output::ParseResult) = build_xml_tree(parse_output.parsed)
 
 
 const DEFAULT_CAPTURE_SYM = "@"
-const CAPTURE_REGEX = Regex("[.]*$(DEFAULT_CAPTURE_SYM)[.]*")
+#const CAPTURE_REGEX = Regex("[.]*$(DEFAULT_CAPTURE_SYM)[.]*")
 
 
 """
