@@ -326,11 +326,11 @@ function match_tree(
         if match_type ∈ (:strict, :nonstrict)
             subtrees_found = Bool[]
             _match_cache = Dict()
-            c1_candidate_idxs = ifelse(
-                match_type == :strict,
-                unique(combinations(1:length(c1), length(c2))),  # :strict branch (uses strict order of target subtrees)
-                unique(permutations(1:length(c1), length(c2)))   # :nonstrict branch (no order of target subtrees)
-            )
+            c1_candidate_idxs = if match_type == :strict
+                combinations(1:length(c1), length(c2))  # :strict branch (uses strict order of target subtrees)
+            else
+                permutations(1:length(c1), length(c2))   # :nonstrict branch (no order of target subtrees)
+            end
             for idxs in c1_candidate_idxs
                 subtree_results = [
                     match_tree(
@@ -369,7 +369,7 @@ function match_tree(
             subtrees_found = Bool[]
             lenc2 = length(c2)
             # search over all query nodes permutations
-            for idxs in unique(permutations(1:length(c2)))
+            for idxs in permutations(1:length(c2))
                 c2_permutation = c2[idxs]
                 capture_vector = MultiDict[]        # accumulates captures
                 found_vector = Bool[]
