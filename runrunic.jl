@@ -24,8 +24,9 @@ You can also pass custom Runic arguments:
 using Pkg
 
 # Install Runic into the @runic environment (idempotent — safe to run every time)
-Pkg.add("Runic")
-
+if Base.find_package("Runic") === nothing
+    Pkg.add("Runic")
+end
 using Runic
 
 # Default arguments exactly as in the original runrunic.sh

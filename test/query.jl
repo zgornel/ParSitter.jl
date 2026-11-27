@@ -14,7 +14,7 @@ _capture_on_empty_query_value(tt, qt) =
 ) ||
     _query_tree_nodevalue(qt) == "*"
 
-@testset "match_type==:strict quering" begin
+@testset "match_type==:strict querying" begin
     @testset "case 1" begin
         target = ParSitter.build_tq_tree(
             (1, 2)
@@ -168,10 +168,62 @@ _capture_on_empty_query_value(tt, qt) =
         @test sum(first, results) == 1  # one match
         @test sum(p -> !isempty(p[2]), results) == 0  # no captures
     end
+    @testset "case 7" begin
+        target = ParSitter.build_tq_tree(
+            ("r", "a", "b", "a")
+        )
+        query = ParSitter.build_tq_tree(
+            ("r", "b", "a")
+        )
+        results = ParSitter.query(target, query; match_type = :strict)
+        @test sum(first, results) == 1
+        @test sum(p -> !isempty(p[2]), results) == 0
+    end
+    @testset "case 6" begin
+        # target:
+        # "r"
+        # ├─ "a"
+        # ├─ "b"
+        # ├─ "x"
+        # ├─ "f1"
+        # │  └─ "1"
+        # ├─ "x2"
+        # └─ "f2"
+        #    └─ "2"
+        # query:
+        # "r"
+        # ├─ "@X"
+        # ├─ "f1"
+        # └─ "@F"
+        target = ParSitter.build_tq_tree(
+            ("r", "a", "b", "x", ("f1", "1"), "x2", ("f2", "2"))
+        )
+        query = ParSitter.build_tq_tree(
+            ("r", "@X", "f1", "@F")
+        )
+        results = ParSitter.query(
+            target,
+            query;
+            match_type = :strict,
+            target_tree_nodevalue = _target_tree_nodevalue,
+            query_tree_nodevalue = _query_tree_nodevalue,
+            capture_function = _capture_function,
+            node_comparison_yields_true = _capture_on_empty_query_value
+        )
+        @test sum(first, results) == 1
+        @test sum(p -> !isempty(p[2]), results) == 1
+        expected_captures = [
+            MultiDict([["X" => v for v in ["a", "b", "x"]]..., ["F" => v for v in ["x2", "f2"]]...]),
+        ]
+        for (is_match, captures) in results
+            if is_match
+                @test captures in expected_captures
+            end
+        end
+    end
 end
 
-
-@testset "match_type==:nonstrict quering" begin
+@testset "match_type==:nonstrict querying" begin
     @testset "case 1" begin
         # target:
         # 1
@@ -434,7 +486,7 @@ end
 end
 
 
-@testset "match_type==:speculative quering" begin
+@testset "match_type==:speculative querying" begin
     @testset "case 1" begin
         # target:
         # 1

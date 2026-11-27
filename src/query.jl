@@ -9,8 +9,8 @@ _strip_spaces(text; maxlen = 80) = begin
     return first(_txt, maxlen)
 end
 
-# merge! for 2 MultiDicts
-Base.merge!(md1::MultiDict{K, V}, md2::MultiDict{K, V}) where {K, V} = begin
+# Merges two MultiDicts
+_merge_captures!(md1::MultiDict{K, V}, md2::MultiDict{K, V}) where {K, V} = begin
     for (k, v2) in md2
         v1 = get(md1, k, V[])
         if !haskey(md1, k)
@@ -64,7 +64,7 @@ AbstractTrees.prevsibling(t::EzXML.Node) = EzXML.prevelement(t)
 
 # AbstractTrees interface for Tuple-based S-expressions (query trees)
 """
-	TreeQueryNode(value::String, type:String)
+	TreeQueryNode(value::String, type:Union{Nothing, String})
 
 Structure used for holding values and types for query nodes
 generated from tree-sitter parsed code.
@@ -106,37 +106,18 @@ head of the expression, the rest are children.
 """
 build_tq_tree(v::T) where {T} = TreeQueryExpr(v, TreeQueryExpr[])
 build_tq_tree(t::TreeQueryExpr) = t
-build_tq_tree(t::NTuple{N, T}) where {N <: Int, T <: Any} = begin
-    if length(t) == 1
-        return TreeQueryExpr{T}(t[1], TreeQueryExpr{T}[])
-    elseif length(t) > 1
-        return TreeQueryExpr{T}(t[1], TreeQueryExpr{T}[build_tq_tree(ti) for ti in t[2:end]])
-    else
-        @error "Input tuple is empty."
-    end
-end
 build_tq_tree(t::Tuple) = begin
     if length(t) == 1
         return TreeQueryExpr(t[1], TreeQueryExpr[])
     elseif length(t) > 1
         return TreeQueryExpr(t[1], TreeQueryExpr[build_tq_tree(ti) for ti in t[2:end]])
     else
-        @error "Input tuple is empty."
+        throw(ArgumentError("Input tuple is empty"))
     end
 end
 
 """
-Convert a `generic_node::T` to a `TreeQueryExpr`. Equivalent to `TreeQueryExpr(nodevalue(x), TreeQueryExpr[])
-"""
-Base.convert(
-    ::Type{ParSitter.TreeQueryExpr},
-    generic_node::T;
-    nodevalue = AbstractTrees.nodevalue
-) where {T} =
-    ParSitter.TreeQueryExpr(nodevalue(generic_node), ParSitter.TreeQueryExpr[])
-
-"""
-Convert a tree `t::Tuple` to a `TreeQueryExpr`. The node value is returned
+Convert a generic tree structure `t::S` to a `TreeQueryExpr`. The node value is returned
 by `nodevalue` and children of the node returned by `children`.
 """
 Base.convert(
@@ -144,7 +125,7 @@ Base.convert(
     t::S;
     nodevalue = AbstractTrees.nodevalue,
     children = AbstractTrees.children
-) where {S <: Tuple} = begin
+) where {S} = begin
     c = children(t)
     if length(c) > 0
         return TreeQueryExpr(nodevalue(t), TreeQueryExpr[Base.convert(TreeQueryExpr, ci; nodevalue) for ci in c])
@@ -179,10 +160,11 @@ Base.convert(::Type{Tuple}, t::S) where {S <: Tuple} = t  # Fix from Aqua.jl
 """
 Checks that a query tree does not contain duplicate capture keys.
 """
-function check_tq_tree(tree::TreeQueryExpr)
+function check_tq_tree(tree::TreeQueryExpr; is_capture_node = is_capture_node)
+    # use `is_capture_node = n->is_capture_node(n, capture_sym="ϵ")` to support custom capture-symbols
     captures = [
-        ParSitter.is_capture_node(n).capture_key for n in PreOrderDFS(tree)
-            if ParSitter.is_capture_node(n).is_match
+        is_capture_node(n).capture_key for n in PreOrderDFS(tree)
+            if is_capture_node(n).is_match
     ]
     unique_captures = unique(captures)
     if length(captures) != length(unique_captures)
@@ -194,13 +176,13 @@ end
 check_tq_tree(::Nothing) = throw(ErrorException("Query tree is nothing, probably query generation failed."))
 
 """
-    build_xml_tree(tree_sitter_xml_ast::String)
+    build_xml_tree(xmlstring::String)
 
 Builds an XML tree out of the XML output from tree-sitter.
 Internally, calls `EzXML.parsexml`.
 """
-function build_xml_tree(tree_sitter_xml_ast::String)
-    tmp = replace(tree_sitter_xml_ast, "\n" => "")
+function build_xml_tree(xmlstring::String)
+    tmp = replace(xmlstring, "\n" => "")
     return EzXML.parsexml(tmp)
 end
 
@@ -213,7 +195,7 @@ build_xml_tree(parse_output::ParseResult) = build_xml_tree(parse_output.parsed)
 
 
 const DEFAULT_CAPTURE_SYM = "@"
-const CAPTURE_REGEX = Regex("[.]*$(DEFAULT_CAPTURE_SYM)[.]*")
+#const CAPTURE_REGEX = Regex("[.]*$(DEFAULT_CAPTURE_SYM)[.]*")
 
 
 """
@@ -244,28 +226,6 @@ is_capture_node(n::TreeQueryExpr{TreeQueryNode}; capture_sym = DEFAULT_CAPTURE_S
     is_capture_node(_query_node_value(n.head); capture_sym)
 
 is_capture_node(n; capture_sym = DEFAULT_CAPTURE_SYM) = (is_match = false, capture_key = "")
-
-"""
-Function that returns the permutations of v in which the elements appear
-in an order consistent with the index in v.
-```
-julia> v = [1, 5, -1]
-       p = Combinatorics.multiset_permutations(v, 2) |> collect
-       keep_sorted_permutations(v, p)
-3-element Vector{Vector{Int64}}:
- [1, 5]
- [1, -1]
- [5, -1]
-```
-"""
-function keep_sorted_permutations(v, permutations)
-    good = falses(length(permutations))
-    for (i, permutation) in enumerate(permutations)
-        indexes = indexin(permutation, v)
-        good[i] = issorted(indexes)
-    end
-    return permutations[good]
-end
 
 """
     function match_tree(target_tree,
@@ -319,6 +279,10 @@ function match_tree(
         node_comparison_yields_true = (args...) -> false,
         node_equality_function = Base.isequal
     )
+    # Checks
+    if match_type ∉ [:strict, :nonstrict, :speculative]
+        throw(ArgumentError("Unknown match type. Supported: ':strict', ':nonstrict', ':speculative'"))
+    end
 
     # Initializations
     c1 = children(target_tree)
@@ -333,7 +297,7 @@ function match_tree(
         node_comparison_yields_true(target_tree, query_tree)
 
     # Check hashes, return if found
-    _hash = hash((target_tree, query_tree))
+    _hash = hash((objectid(target_tree), objectid(query_tree), match_type))
     if _hash in keys(match_cache)
         return match_cache[_hash]..., target_tree
     end
@@ -359,54 +323,21 @@ function match_tree(
                 found && push!(captured_symbols, capture_key => capture_function(target_tree))
             end
         end
-        if match_type == :strict
-            # permutations with strict target tree order of sub-trees of the target tree
-            # are matched against the query tree; if any of them matches, the function returns
+        if match_type ∈ (:strict, :nonstrict)
             subtrees_found = Bool[]
             _match_cache = Dict()
-            for c1_permutation in keep_sorted_permutations(c1, collect(Combinatorics.combinations(c1, length(c2))))
-                _captured_symbols = MultiDict()
-                subtree_results = [
-                    match_tree(
-                            t, q;
-                            match_cache = _match_cache,
-                            captured_symbols = _captured_symbols,
-                            match_type = :strict,
-                            is_capture_node,
-                            target_tree_nodevalue,
-                            query_tree_nodevalue,
-                            capture_function,
-                            node_comparison_yields_true,
-                            node_equality_function
-                        )
-                        for (t, q) in zip(c1_permutation, c2)
-                ]
-                # All sub-trees of a specific permutation must match
-                _found = all(first, subtree_results)
-                if _found
-                    for (_, subtree_captures, _) in subtree_results
-                        merge!(captured_symbols, subtree_captures)  # add matched symbols
-                    end
-                end
-                push!(subtrees_found, _found)  # store whether sub-tree permutation was found
+            c1_candidate_idxs = if match_type == :strict
+                combinations(1:length(c1), length(c2))  # :strict branch (uses strict order of target subtrees)
+            else
+                permutations(1:length(c1), length(c2))   # :nonstrict branch (no order of target subtrees)
             end
-            # Resolve matching:
-            # - any of the matched sub-trees (from permutations will do)
-            # - logical AND is used to transmit finding recursively upwards
-            found &= any(subtrees_found)
-        elseif match_type == :nonstrict
-            # unordered permutations of sub-trees of the target tree are matched against
-            # the query tree; if any of them matches, the function returns
-            subtrees_found = Bool[]
-            _match_cache = Dict()
-            for c1_permutation in unique(permutations(c1, length(c2)))
-                _captured_symbols = MultiDict()
+            for idxs in c1_candidate_idxs
                 subtree_results = [
                     match_tree(
                             t, q;
                             match_cache = _match_cache,
-                            captured_symbols = _captured_symbols,
-                            match_type = :nonstrict,
+                            captured_symbols = MultiDict(),
+                            match_type,
                             is_capture_node,
                             target_tree_nodevalue,
                             query_tree_nodevalue,
@@ -414,13 +345,13 @@ function match_tree(
                             node_comparison_yields_true,
                             node_equality_function
                         )
-                        for (t, q) in zip(c1_permutation, c2)
+                        for (t, q) in zip(c1[idxs], c2)
                 ]
                 # All sub-trees of a specific permutation must match
                 _found = all(first, subtree_results)
                 if _found
                     for (_, subtree_captures, _) in subtree_results
-                        merge!(captured_symbols, subtree_captures)  # add matched symbols
+                        _merge_captures!(captured_symbols, subtree_captures)  # add matched symbols
                     end
                 end
                 push!(subtrees_found, _found)  # store whether sub-tree permutation was found
@@ -437,8 +368,9 @@ function match_tree(
             _match_cache = Dict()
             subtrees_found = Bool[]
             lenc2 = length(c2)
-            # seach over all query nodes permutations
-            for c2_permutation in unique(permutations(c2))
+            # search over all query nodes permutations
+            for idxs in permutations(1:length(c2))
+                c2_permutation = c2[idxs]
                 capture_vector = MultiDict[]        # accumulates captures
                 found_vector = Bool[]
                 qidx = 1
@@ -468,7 +400,7 @@ function match_tree(
                 if qidx > lenc2
                     for (_found, _capture) in zip(found_vector, capture_vector)
                         if _found
-                            merge!(captured_symbols, _capture)  # merge captures only if whole subtree matched
+                            _merge_captures!(captured_symbols, _capture)  # merge captures only if whole subtree matched
                         end
                     end
                     push!(subtrees_found, true)
@@ -479,7 +411,6 @@ function match_tree(
             end
             found &= any(subtrees_found)
         else
-            @warn "Unknown match type. Supported: ':strict', ':nonstrict', ':speculative'"
             return false, captured_symbols, target_tree
         end
         push!(match_cache, _hash => (found, captured_symbols))
@@ -509,7 +440,11 @@ function query(
         node_equality_function = Base.isequal
     )
     # Checks
+    if match_type ∉ [:strict, :nonstrict, :speculative]
+        throw(ArgumentError("Unknown match type. Supported: ':strict', ':nonstrict', ':speculative'"))
+    end
     check_tq_tree(query_tree)
+    # Traverse & match
     matches = []
     for tn in PreOrderDFS(target_tree)
         m = match_tree(
@@ -549,7 +484,7 @@ get_capture(qr::Tuple, key) = begin
     values = get(captures, key, nothing)
     values == nothing && return nothing
     if values isa Vector && length(values) > 1
-        throw(ErrorException("Ambigous capture, more than 1 match for key \"$key\""))
+        throw(ErrorException("Ambiguous capture, more than 1 match for key \"$key\""))
     end
     return first(value for value in values)
 end

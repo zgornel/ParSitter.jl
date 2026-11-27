@@ -12,7 +12,6 @@ using Reexport
 
 # Init function: initializes languages
 function __init__()
-    # Intialize
     language_directory = joinpath(artifact"parsitter-language-map", "languages")
     return populate!(
         LANGUAGE_MAP,
@@ -28,12 +27,14 @@ function __init__()
 end
 
 # Public API
-export parse, # parses code, files and directories
-    print_code_tree, # prints code using AbstractTrees
+export print_code_tree, # prints code using AbstractTrees
     build_tq_tree, # builds TreeQueryExpr's from tuples
     build_xml_tree, # builds an XML tree from XML string
+    TreeQueryExpr, # tree query object
+    TreeQueryNode, # tree query node object
     match_tree, # matches two trees
     query, # queries a tree (matches also all subtrees)
     get_capture, # get values of captured symbols from query results
+    QueryLanguage, # query language submodule
     parse_code_snippet_to_query  # generate a tree query from a code snippet
 end  # module

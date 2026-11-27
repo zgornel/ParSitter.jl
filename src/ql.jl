@@ -27,7 +27,7 @@ const GENERIC_TYPE = "GENERIC_CODE"
 
 """
 Retrieves the comment symbol from DEFAULT_TYPE_REPLACEMENTS.
-All comments are assument to be of the form: \"<COMMENT_SYMBOL>comment\".
+All comments are assumed to be of the form: \"<COMMENT_SYMBOL>comment\".
 """
 function _get_comment_symbol(language; capture_type = "COMMENT")
     return first(split(DEFAULT_TYPE_REPLACEMENTS[language][capture_type], "comment"))
@@ -95,7 +95,7 @@ function _generate_name(capture_name, capture_type, language)
         if capture_type ∈ ["NUMBER", "BOOLEAN", "ARGUMENT_LIST"]
             # When the code is not captured, code replacement values for specific types:
             # numbers/booleans/argument lists, are inserted in generated code 'as is' i.e
-            # the content does not udergo specific treatment
+            # the content does not undergo specific treatment
             return lang_replacements[capture_type]
         elseif capture_type == "STRING"
             return _inquote_string_value(lang_replacements[capture_type], language)
@@ -150,14 +150,9 @@ end
 Parse code using tree-sitter and return the XML representation.
 """
 function _parse_code_to_xml_tree(code::String, language::String)
-    try
-        _output = ParSitter.parse(ParSitter.Code(code), language; escape_chars = false, print_code = false)
-        xmltree = ParSitter.build_xml_tree(_output)
-        return xmltree
-    catch e
-        @warn "Could not parse generated code, probably wrong query language formatting.\n$e"
-        return nothing
-    end
+    _output = ParSitter.parse(ParSitter.Code(code), language; escape_chars = false, print_code = false)
+    xmltree = ParSitter.build_xml_tree(_output)
+    return xmltree
 end
 
 
@@ -237,8 +232,8 @@ end
 Parse a code snippet with capture placeholders and convert it to a TreeQueryExpr.
 
 # Arguments
-- `code_snippet::String`: Code with placeholders like `{{name::type}}`, `{{::type}}` or `{{custom_code}}`
-- `language::String`: Programming language ("python", "julia", "c", "c#", "r")
+- `code_snippet::String`: Code with placeholders like `{{name::TYPE}}`, `{{::TYPE}}` or `{{custom_code}}`
+- `language::String`: Programming language ("python", "julia", "c", "c_sharp", "r")
 - `custom_replacements::Dict`: Optional replacements for `{{custom_code}}` placeholders
 
 # Returns
@@ -249,7 +244,7 @@ Parse a code snippet with capture placeholders and convert it to a TreeQueryExpr
 # Example
 ```julia
 code = \"\"\"
-def {{func_name::identifier}}():
+def {{func_name::IDENTIFIER}}():
     {{code}}
 \"\"\"
 query_expr = ParSitter.QueryLanguage.parse_code_snippet_to_query(code, "python"; custom_replacements=Dict("code"=>"pass"))
@@ -281,8 +276,12 @@ function parse_code_snippet_to_query(
         push!(symbol_map, replacement => (capture_type, is_capturable))
     end
     # step 3: parse code with treesitter
-    _tree = _parse_code_to_xml_tree(transformed_code, language)
-    _tree === nothing && return nothing, symbol_map, transformed_code  # return symbol map, transformed code for debugging
+    _tree = try
+        _parse_code_to_xml_tree(transformed_code, language)
+    catch e
+        @warn "Could not parse generated code, probably wrong query language formatting.\n$e"
+        return nothing, symbol_map, transformed_code  # return symbol map, transformed code for debugging
+    end
     # step 4: transform parsed tree to TreeQueryExpr
     query_expr = _xml_node_to_tqexpr(_tree.root, symbol_map, language)
     return query_expr, symbol_map, transformed_code

@@ -4,3 +4,4 @@ tmp/*
 docs/build/
 Manifest.toml
 deps/grammars/out/
+*.code-workspace

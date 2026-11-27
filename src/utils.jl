@@ -47,7 +47,14 @@ const SKIP_CONTENT_TS_TYPES = Dict{String, Vector{String}}()
 
 """
 Reads the contents of `language_directory` and populates the constants:
-`LANGUAGE_MAP`, `FILE_EXTENSIONS` and `DEFAULT_TYPE_REPLACEMENTS`.
+ - `LANGUAGE_MAP`: maps ParSitter language names to tree-sitter scope names,
+ - `FILE_EXTENSIONS`: maps ParSitter language names to file extensions,
+ - `DEFAULT_TYPE_REPLACEMENTS`: indicates language-specific values for types in query generation
+ - `STRING_DELIMS`: indicates language-specific string delimiters
+ - `SKIP_CHILDREN_TYPES`: indicates which specific ParSitter types' have their sub-trees ignored in matching
+ - `OVERRIDE_TYPES`: indicates which specific ParSitter types do not count in tree-matching
+ - `KEEP_CONTENT_TS_TYPES`: tree-sitter types whose content needs to match
+ - `SKIP_CONTENT_TS_TYPES`: tree-sitter node types whose content is ignored in matching
 """
 function populate!(
         language_map,
@@ -126,7 +133,7 @@ remove any direct child whose subtree contains `value` in any of its nodes
 as `prune!(root, nodevalue(root))` to prune duplicates of the root value).
 Assumes `AbstractTrees.children(node)` returns a mutable `Vector`, standard for most
 custom `Node` types. A custom function `nodevalue_function` can be applied to
-each node to extract its value for the comparision with `value`.
+each node to extract its value for the comparison with `value`.
 """
 function prune!(node, value; nodevalue_function = AbstractTrees.nodevalue)
     # 1. Recursively prune deeper levels first (bottom-up)

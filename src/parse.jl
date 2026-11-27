@@ -1,5 +1,7 @@
 using Pkg.Artifacts
 
+public Directory, File, Code, ParseResult, parse
+
 """
     struct Directory
         name::String
@@ -55,8 +57,6 @@ function check_language(language, lang_map)
     return @assert language in keys(lang_map) "Unrecognized language $language, exiting..."
 end
 
-Base.isfile(::Nothing) = false
-
 """
 Get a list of language names, as defined in the `parsitter_name` field of the
 `<language>.toml` ParSitter language map file. It represents the name of the
@@ -72,7 +72,7 @@ function _tree_sitter_bin_path()
     return try
         joinpath(artifact"tree-sitter", Sys.iswindows() ? "tree-sitter.exe" : "tree-sitter")
     catch e
-        error("No tree-sitter binary artifact found. Supported are `linux`, `macos`, `windows` (x86_64/aarch64)")
+        error("No tree-sitter binary artifact found. Supported are `linux`, `macos` (x86_64/aarch64), `windows` (x86_64)")
     end
 end
 
@@ -82,7 +82,7 @@ function _tree_sitter_lib_path(language::String)
     grammars = try
         artifact"tree-sitter-grammars"
     catch e
-        error("No tree-sitter grammars artifact found. Supported are `linux`, `macos`, `windows` (x86_64/aarch64)")
+        error("No tree-sitter grammars artifact found. Supported are `linux`, `macos` (x86_64/aarch64), `windows` (x86_64)")
     end
     return joinpath(grammars, "$language.$(_shared_lib_ext())"), language
 end
@@ -190,7 +190,7 @@ end
 """
     print_code_tree(code::String, language::String; maxdepth=100)
 
-Prints the AST of a gieven piece of `code` written in a given
+Prints the AST of a given piece of `code` written in a given
 programming `language`.
 """
 print_code_tree(code::String, language::String; maxdepth = 100) = begin
